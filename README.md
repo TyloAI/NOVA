@@ -1,106 +1,142 @@
 <div align="center">
-<h1>
-  <img src="https://tyloai.com/logo.png" alt="Logo" width="50" style="vertical-align: middle; margin-right: 15px;">
-  PROTOETH/K
-</h1>
-<p><em>Building AI that thinks deeply and acts responsibly.</em></p>
 
+<img src="https://tyloai.com/logo.png" alt="PROTOETH/K Logo" height="60" style="vertical-align:middle; margin-bottom:10px;">
 
-![WebGPU Required](https://img.shields.io/badge/WebGPU-required-e65100)
-![Status](https://img.shields.io/badge/status-experimental-f06292)
-![Memory](https://img.shields.io/badge/memory-fast--weight-3949ab)
-![Stack](https://img.shields.io/badge/stack-WebGPU%20%7C%20ESM-455a64)
-![License](https://img.shields.io/badge/license-AGPL--3.0-2e7d32)
-![Version](https://img.shields.io/badge/Version-0.1.0-blue)
+<h1 style="font-size: 3em; margin-top: 0;">P R O T O E T H / K</h1>
+
+<p style="font-size: 1.2em; font-style: italic; color: #666;">
+Building AI that thinks deeply and acts responsibly.
+</p>
+
+---
+
+![WebGPU Required](https://img.shields.io/badge/Hardware-WebGPU%20Required-e65100?style=for-the-badge&logo=webgpu)
+![Status](https://img.shields.io/badge/Status-Experimental%20Research-f06292?style=for-the-badge)
+![Memory](https://img.shields.io/badge/Architecture-Hebbian%20Fast%20Weights-3949ab?style=for-the-badge)
+![License](https://img.shields.io/badge/License-AGPL%20v3.0-2e7d32?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-0.1.0-blue?style=for-the-badge)
 
 # N.O.V.A.
-### Neural Organic Virtual Architecture
+### Native Object Vector Architecture
 **Technical Report: On-Device Agile Reasoning via WebGPU-Accelerated Hebbian Fast Weights**
+
+[Simplified Chinese (简体中文)](zh-Hans.md) | [Traditional Chinese (繁體中文)](zh-Hant.md)
 
 </div>
 
-# N.O.V.A. (Native Object Vector Architecture)
+---
 
-Other languages: [Simplified Chinese](zh-Hans.md) | [Traditional Chinese](zh-Hant.md)
+## 1. Abstract
 
-## Abstract
+**N.O.V.A.** (Native Object Vector Architecture) is a browser-resident, fast-weight dialogue stack executing entirely on the WebGPU compute substrate. Unlike static Transformer models, N.O.V.A. performs **token-level Hebbian adaptation** in real-time, utilizing a symplectic manifold for context retention and "Origami-style" symbolic scoping for structural logic. This architecture eliminates the need for server-side inference, offering a fully transparent, inspection-ready reference implementation for client-side agile reasoning. This report details the system's mathematical formulation, memory dynamics, and deployment methodology.
 
-N.O.V.A. is a browser-resident fast-weight dialogue stack that runs entirely on WebGPU, performs token-level Hebbian adaptation, and exposes every component for inspection. A custom tokenizer plus an entropic byte-pair compressor train a compact vocabulary on the fly, while a symplectic fast-weight manifold, hormone-guided biasing, and Origami-style scope memory sustain short-context reasoning without a server. The goal is to provide a technical, reproducible, and modifiable reference for client-side learning, not a turnkey black-box assistant.
+## 2. Architectural Specification
 
-## Introduction
+N.O.V.A. is engineered to provide a reproducible, modifiable reference for edge-based learning, moving beyond the paradigm of "black-box" turnkey assistants.
 
-### System overview (technical report, not a tutorial)
-- **Compute substrate.** `src/core/Device.js` wraps WebGPU adapter/device/queue; `NovaTensor` manages GPU buffers with Xavier/residual init, unit-spinor states, and safe `read`/`dispose`. All math runs in-browser; no server path exists.
-- **Fast-weight cell.** `src/layers/FastWeight.js` chains RMSNorm → rotational projections `(wr, wv, wg)` → symplectic flow for complex-valued manifold updates → gated FFN `(ffnUp1/ffnUp2/ffnDown)` with swish gating → active inference adjustment using `wPredict` → logits via shared embedding matrix. Thinking steps iterate this cell per token for short “inner-loop” reasoning.
-- **Memory + biasing.** Fast weights capture token-to-token associations with decay/learning-rate control; `HormoneSystem` tiles affective scalars across the bias vector; `OrigamiMemory` pushes/pops hidden state on `{}` scopes to mimic structured retention.
-- **Tokenizer and vocabulary.** `Tokenizer` enforces ASCII cleanliness, reserves `<unk>/<bos>/<eos>` and special mode tokens, and locks vocabulary after training. `EntropicCompressor` (byte-level BPE) learns a 16k “gene” table from the provided corpus before training to compress frequent patterns.
-- **Runtime heuristics.** `src/main.js` applies n-gram anchoring (bigram/trigram counts), repetition penalties, punctuation gating, anchor bonuses, exemplar bias (optional), and mode tags (`Mode: chat/task/code`) to stabilize sampling. Temperature/top-k plus logit normalization govern stochasticity.
-- **Training loop.** `scripts/train_browser.js` performs quickstart training in-browser: token-by-token Hebbian updates conditioned on whether tokens are inside the AI span, with optional code-boost replays, context decay, and yield points to keep UI responsive.
-- **Snapshots and reproducibility.** Snapshot load/export includes model weights and tokenizer vocab; `nova.config.js` controls auto-load/export and file location. No IndexedDB persistence is assumed—explicit download/upload is the reproducibility path.
+### 2.1 Compute Substrate (`src/core/`)
+* **`Device.js`**: A low-level wrapper around the WebGPU Adapter, Device, and Queue.
+* **`NovaTensor`**: Manages raw GPU buffers with specialized initialization kernels (Xavier, Residual, Unit-Spinor). It implements safe memory lifecycles (`read`/`dispose`), ensuring all mathematical operations remain strictly in-browser with zero server dependency.
 
-**Limitations and scope.** Model size is small (word-level, short context) and susceptible to dataset bias; WebGPU is mandatory; safety/guardrails are minimal; persistence depends on snapshots; outputs remain stochastic despite n-gram constraints. Not suitable for safety-critical or privacy-sensitive use without additional review.
+### 2.2 The Fast-Weight Cell (`src/layers/FastWeight.js`)
+The core reasoning unit iterates per token, forming a "Thinking Step" loop:
+1.  **Projection:** Input embeddings pass through RMSNorm and project into rotational components $(W_r, W_v, W_g)$.
+2.  **Symplectic Flow:** Updates a complex-valued manifold using energy-preserving rotations, preventing gradient decay.
+3.  **Gated FFN:** A Swish-gated Feed-Forward Network ($W_{up1}, W_{up2}, W_{down}$) processes the manifold state.
+4.  **Active Inference:** The system predicts its own next state via $W_{predict}$ and adjusts the manifold based on prediction error.
 
-**Operational expectations.** Use ASCII chat-formatted data (`User:... AI:...`) for stability; long-form or multilingual data will collapse to `<unk>`; GPU memory dictates feasible `dModel`/`layers`; browser flags may be required to enable WebGPU on some platforms.
+### 2.3 Memory & Biasing Dynamics
+* **Hebbian Consolidation:** Fast weights capture transient token-to-token associations dynamically, governed by variable decay and learning rates.
+* **HormoneSystem:** Tiles affective scalar values across the bias vector, allowing for "emotional" modulation of generation probability.
+* **OrigamiMemory:** A symbolic stack that pushes/pops hidden states upon detecting structural delimiters (e.g., `{`, `}`), enabling robust handling of nested logic in code generation.
 
-## Mathematical Formulation
+### 2.4 Tokenization & Runtime Heuristics
+* **Entropic Compression:** A byte-level BPE compressor learns a compact ~16k vocabulary "gene" table from the corpus, optimizing for high-density concepts.
+* **Sampling Strategy:** Inference is stabilized via `src/main.js` using n-gram anchoring (bigram/trigram), repetition penalties, anchor bonuses, and mode-specific tags (`Mode: chat/task/code`).
 
-Let the tokenizer map a text stream into tokens \(t_1,\dots,t_T\), embeddings \(x_t = E(t_t)\), and a normalized stream \(\hat{h}_t = \mathrm{RMSNorm}(x_t)\). The fast-weight cell computes
-\[
-r_t = W_r \hat{h}_t,\quad v_t = W_v \hat{h}_t,\quad g_t = \sigma(W_g \hat{h}_t),
-\]
-followed by a symplectic memory flow
-\[
-s_t = \lambda\,R(r_t)\,s_{t-1} + \beta\,[v_t,\,\kappa v_t],\qquad
-m_t = g_t \odot \mathrm{read}(s_t,\phi),
-\]
-where \(R(\cdot)\) is a complex rotation, \(\lambda\) the manifold decay, and \(\phi\) the readout mix. A gated feed-forward block applies
-\[
-u_t = \mathrm{swish}(W_{u1} m_t) \odot (W_{u2} m_t),\quad
-c_t = W_d u_t,\quad
-h_t = \mathrm{RMSNorm}(m_t + c_t).
-\]
-Active inference adjusts the manifold toward predicted embeddings \(\hat{x}_{t+1} = W_p h_t\) by gradient-free correction. Hebbian consolidation updates the memory manifold and projections with
-\[
-M \leftarrow \rho M + \eta\, (h_t \otimes e_{t+1}),
-\]
-using decay \(\rho\) and learning rate \(\eta\). Generation draws logits
-\[
-\ell_t = E^\top h_t + b_{\text{ngram}} + b_{\text{bias}},
-\]
-where \(b_{\text{ngram}}\) encodes bigram/trigram priors and \(b_{\text{bias}}\) aggregates repetition, punctuation, anchor, and hormone-derived penalties/bonuses. Sampling uses temperature/top-\(k\) with repeat constraints and optional exemplar filtering. Mode tokens (`Mode: chat/task/code`) condition both training and inference when present.
+---
 
-**Data path.** Raw text → tokenizer (with optional entropic compression pre-pass) → token IDs with `<bos>/<eos>` → fast-weight forward + Hebbian updates (training) → snapshot (weights + vocab). Inference reuses the same path without updates unless explicitly enabled.
+## 3. Mathematical Formulation
 
-## How to Run
+Let the tokenizer map a text stream into tokens $t_1,\dots,t_T$, producing embeddings $x_t = E(t_t)$. The normalized stream is defined as $\hat{h}_t = \mathrm{RMSNorm}(x_t)$.
 
-1. **Prerequisites.** A WebGPU-capable browser (Chrome/Edge recent), served via `https` or `localhost`. No backend is required.
-2. **Start a static server.** For example:
-   - Node: `npx http-server .`
-   - Python: `python -m http.server 8000`
-   Then visit `http://localhost:8080` or `http://localhost:8000`.
-3. **Prepare data.** Default corpus: `data/training_data.txt`, each line `User:... AI:...` in ASCII. Short, natural replies improve stability. Non-chat text is auto-split into sentences.
-4. **Train and chat.** Click “Pulse” in `index.html`. If `nova.config.js` enables `snapshot.autoLoad`, the UI first attempts to restore `model.snapshot`; otherwise it trains in-browser via `scripts/train_browser.js`. Snapshots include model weights and tokenizer vocab and can be exported for reuse.
-5. **Tune behavior.** Adjust `nova.config.js` to set model width/depth (`dModel`, `layers`, `ffnHidden`), Hebbian rates (`runtime.learningRate`, `runtime.decay`), context windows, n-gram weighting, exemplar bias, temperature/top-\(k\), punctuation guards, and hormone baselines. `training.codeBoost` can upsample code-like lines; `runtime.thinkingSteps` controls inner-loop iterations per token.
-6. **Observe/log.** UI log shows data loading, entropic compressor progress, snapshot load status, and training line counts; console logs expose per-epoch progress and n-gram statistics.
-6. **Troubleshooting.** If WebGPU is unavailable, switch browsers or enable the WebGPU flag; blank outputs often indicate missing training data or blocked tokens; non-ASCII lines will be mapped to `<unk>` and reduce quality.
+### 3.1 Projection & Gating
+The fast-weight cell computes the rotational ($r$), value ($v$), and gate ($g$) vectors:
+$$
+r_t = W_r \hat{h}_t,\quad v_t = W_v \hat{h}_t,\quad g_t = \sigma(W_g \hat{h}_t)
+$$
 
-## License
+### 3.2 Symplectic Memory Flow
+State retention is governed by a complex rotation $R(\cdot)$ on the manifold $s$, ensuring long-term stability:
+$$
+s_t = \lambda\,R(r_t)\,s_{t-1} + \beta\,[v_t,\,\kappa v_t]
+$$
+$$
+m_t = g_t \odot \mathrm{read}(s_t,\phi)
+$$
+Where $\lambda$ represents manifold decay and $\phi$ is the readout mixture coefficient.
 
-Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). Copyright © 2026 Protoethik Co., Ltd. Use, modification, and networked deployment must comply with AGPL-3.0, including source disclosure requirements.
+### 3.3 Gated FFN & Active Inference
+The manifold output is processed via a Swish-gated block:
+$$
+u_t = \mathrm{swish}(W_{u1} m_t) \odot (W_{u2} m_t),\quad c_t = W_d u_t
+$$
+$$
+h_t = \mathrm{RMSNorm}(m_t + c_t)
+$$
+The system performs **Active Inference**, adjusting the manifold towards predicted embeddings $\hat{x}_{t+1} = W_p h_t$ via gradient-free correction.
 
-## Citation
+### 3.4 Hebbian Update Rule
+The memory manifold and projections are updated in real-time during the forward pass:
+$$
+M \leftarrow \rho M + \eta\, (h_t \otimes e_{t+1})
+$$
+Where $\rho$ is the decay factor and $\eta$ is the learning rate.
 
-If you reference this work, please cite as:
+### 3.5 Logit Generation
+Final logits are computed by projecting back to the vocabulary space, modulated by n-gram priors and bias vectors:
+$$
+\ell_t = E^\top h_t + b_{\text{ngram}} + b_{\text{bias}}
+$$
 
-```
-@techreport{protoethik2026nova,
-  title   = {N.O.V.A.: Native Object Vector Architecture for Browser-Resident Fast-Weight Dialogue},
-  author  = {Protoethik Co., Ltd.},
-  year    = {2026},
-  note    = {Version 1.1, WebGPU fast-weight prototype.}
-}
-```
+---
 
-## Contact
+## 4. Deployment & Reproduction
 
-For technical questions, open an issue in the project repository or reach out to Protoethik Co., Ltd. through your standard support channel. This software is experimental; deploy only after your own verification and compliance review.
+### Prerequisites
+* **Hardware:** WebGPU-capable GPU (Integrated or Discrete).
+* **Software:** Recent Chromium-based browser (Chrome/Edge).
+
+### Operational Steps
+1.  **Serve Static Files:**
+    No backend logic is required. Serve the root directory via any HTTP server.
+    ```bash
+    # Node.js
+    npx http-server .
+    # Python
+    python -m http.server 8000
+    ```
+2.  **Initialize Runtime:**
+    Navigate to `http://localhost:8000` and click **"Pulse"** to initialize the compute shaders.
+3.  **Training & Inference:**
+    * **Auto-Load:** If `nova.config.js` enables `snapshot.autoLoad`, the system restores `model.snapshot`.
+    * **In-Browser Training:** Otherwise, `scripts/train_browser.js` executes token-by-token Hebbian updates on `data/training_data.txt`.
+4.  **Configuration:**
+    Adjust hyperparameters (dModel, layers, learningRate) in `nova.config.js`.
+
+---
+
+## 5. Limitations & Scope
+
+* **Experimental Nature:** N.O.V.A. is a research prototype focusing on architectural novelty (Fast Weights/WebGPU) rather than scale.
+* **Data Sensitivity:** The model is susceptible to dataset bias and assumes ASCII-formatted chat data.
+* **Persistence:** Model state is transient unless explicitly exported via Snapshots.
+* **Safety:** Minimal guardrails are implemented. Not suitable for safety-critical applications without further review.
+
+
+
+---
+
+## 6. License
+Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). Copyright © 2026 Protoethik Co., Ltd.
+Use, modification, and networked deployment must comply with AGPL-3.0, including source disclosure requirements.
