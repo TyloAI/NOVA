@@ -8,6 +8,11 @@
 Building AI that thinks deeply and acts responsibly.
 </p>
 
+[![Website](https://img.shields.io/badge/Company_Website-8A2BE2?style=for-the-badge&logo=ethereum)](https://protoethik.com)
+
+[![TyloAI](https://img.shields.io/badge/TyloAI_Chat-10a37f?style=for-the-badge&logo=openai)](https://tyloai.com)
+
+[![CLI](https://img.shields.io/badge/ode--code_CLI-3498db?style=for-the-badge&logo=terminal)](https://docs.tyloai.com/ode-code.html)
 ---
 
 ![WebGPU Required](https://img.shields.io/badge/Hardware-WebGPU%20Required-e65100?style=for-the-badge&logo=webgpu)
@@ -19,9 +24,6 @@ Building AI that thinks deeply and acts responsibly.
 # N.O.V.A.
 ### Native Object Vector Architecture
 **Technical Report: On-Device Agile Reasoning via WebGPU-Accelerated Hebbian Fast Weights**
-
-[Simplified Chinese (简体中文)](zh-Hans.md) | [Traditional Chinese (繁體中文)](zh-Hant.md)
-
 </div>
 
 ---
