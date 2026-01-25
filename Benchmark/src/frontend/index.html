@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
+    <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>N.O.V.A. Protocol | CLI Arena</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", "Inter", system-ui, -apple-system, sans-serif;
+        background: radial-gradient(circle at 20% 20%, #0d1b2a, #02060a 50%, #000 80%);
+        color: #e8eef7;
+        min-height: 100vh;
+        display: grid;
+        place-content: center;
+        letter-spacing: 0.02em;
+      }
+      .wrap {
+        padding: 24px 28px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+        max-width: 720px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+      p {
+        margin: 0 0 8px;
+        color: #9bb4d6;
+      }
+      code {
+        background: rgba(255, 255, 255, 0.07);
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>N.O.V.A. Protocol: Ghost Runner</h1>
+      <p id="status">Preparing arena…</p>
+      <p><small>COOP/COEP enforced. WebGPU warmup in progress.</small></p>
+      <p><code id="meta"></code></p>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

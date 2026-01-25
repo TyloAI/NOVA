@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>N.O.V.A. Protocol Benchmark Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg: radial-gradient(circle at 20% 20%, #0d1b2a, #02060a 50%, #000 80%);
+        --panel: rgba(255, 255, 255, 0.06);
+        --text: #e8eef7;
+        --accent: #70e3ff;
+        --accent-2: #ff7a9e;
+        --muted: #8ca0c4;
+        --mono: "SFMono-Regular", Consolas, Menlo, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        background: var(--bg);
+        font-family: "Space Grotesk", "Inter", system-ui, -apple-system, sans-serif;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        padding: 32px;
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(28px, 2vw + 16px, 40px);
+        letter-spacing: 0.03em;
+      }
+      .pill {
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 16px;
+        backdrop-filter: blur(8px);
+      }
+      .card h3 {
+        margin: 0 0 8px;
+        font-size: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+      }
+      .value {
+        font-size: 26px;
+        font-weight: 700;
+      }
+      canvas {
+        width: 100%;
+        height: 320px;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+      }
+      .table th,
+      .table td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 13px;
+      }
+      .table th {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      footer {
+        color: var(--muted);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>N.O.V.A. Protocol | Benchmark Report</h1>
+        <div class="pill" id="meta"></div>
+      </div>
+      <div class="pill" id="hardware"></div>
+    </header>
+
+    <section class="grid">
+      <div class="card">
+        <h3>N.O.V.A. Score</h3>
+        <div class="value" id="score-nova">–</div>
+      </div>
+      <div class="card">
+        <h3>GPT-2 Score</h3>
+        <div class="value" id="score-gpt2">–</div>
+      </div>
+      <div class="card">
+        <h3>N.O.V.A. Latency (avg ms)</h3>
+        <div class="value" id="latency-nova">–</div>
+      </div>
+      <div class="card">
+        <h3>GPT-2 Latency (avg ms)</h3>
+        <div class="value" id="latency-gpt2">–</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Run Summary (3 passes)</h3>
+      <canvas id="curve"></canvas>
+    </section>
+
+    <section class="card">
+      <h3>Trace</h3>
+      <div class="stack" id="trace"></div>
+      <table class="table" id="table"></table>
+    </section>
+
+    <footer>
+      Offline ready. Chart.js loaded via CDN. Data injected into template placeholder
+      <code>__REPORT_DATA__</code>.
+    </footer>
+
+    <script>
+      const report = __REPORT_DATA__;
+      const runs = report.runs || [];
+      const summary = report.summary || {};
+      const meta = document.getElementById('meta');
+      const hardware = document.getElementById('hardware');
+      const scoreNova = document.getElementById('score-nova');
+      const scoreGpt2 = document.getElementById('score-gpt2');
+      const latencyNova = document.getElementById('latency-nova');
+      const latencyGpt2 = document.getElementById('latency-gpt2');
+      const trace = document.getElementById('trace');
+      const table = document.getElementById('table');
+
+      meta.textContent = [
+        `Seed ${report.metadata.seed}`,
+        new Date(report.metadata.startedAt).toLocaleString(),
+        report.metadata.browser,
+      ].join(' • ');
+      hardware.textContent = [
+        `GPU: ${report.metadata.gpu || 'unknown'}`,
+        `Hardware Score: ${Number(report.hardware.hardwareScore || 0).toFixed(2)}`,
+      ].join(' | ');
+
+      scoreNova.textContent = summary.novaScore ? summary.novaScore.toFixed(2) : '–';
+      scoreGpt2.textContent = summary.gpt2Score ? summary.gpt2Score.toFixed(2) : '–';
+      latencyNova.textContent = summary.avgLatencyA ? summary.avgLatencyA.toFixed(2) : '–';
+      latencyGpt2.textContent = summary.avgLatencyB ? summary.avgLatencyB.toFixed(2) : '–';
+
+      const mergedLogs = runs.flatMap((r) => r.logs || []);
+      trace.innerHTML = mergedLogs.map((line) => `<div class="pill">${line}</div>`).join('');
+
+      const headers = ['Run', 'N.O.V.A. Score', 'GPT-2 Score', 'Avg Loss', 'Latency A (ms)', 'Latency B (ms)'];
+      table.innerHTML = `
+        <tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr>
+        ${runs
+          .map(
+            (r) =>
+              `<tr><td>${r.runIndex}</td><td>${r.finalScoreNova.toFixed(2)}</td><td>${r.finalScoreGpt2.toFixed(
+                2,
+              )}</td><td>${r.avgLoss.toFixed(4)}</td><td>${r.avgLatencyA.toFixed(2)}</td><td>${r.avgLatencyB.toFixed(
+                2,
+              )}</td></tr>`,
+          )
+          .join('')}
+      `;
+
+      const ctx = document.getElementById('curve');
+      const labels = runs.map((r) => `Run ${r.runIndex}`);
+      const novaLat = runs.map((r) => r.avgLatencyA);
+      const gptLat = runs.map((r) => r.avgLatencyB);
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'N.O.V.A. Avg Latency (ms)',
+              data: novaLat,
+              backgroundColor: 'rgba(112, 227, 255, 0.5)',
+              borderColor: '#70e3ff',
+            },
+            {
+              label: 'GPT-2 Avg Latency (ms)',
+              data: gptLat,
+              backgroundColor: 'rgba(255, 122, 158, 0.5)',
+              borderColor: '#ff7a9e',
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { labels: { color: '#d6e2ff' } },
+          },
+          scales: {
+            x: { ticks: { color: '#a4b6d6' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: '#a4b6d6' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
