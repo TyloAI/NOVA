@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N.O.V.A. Chat</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f0a07;
+      --panel: #1a1410;
+      --border: rgba(255, 235, 205, 0.16);
+      --accent: #ffb374;
+      --accent-2: #ff7f50;
+      --text: #f5e9df;
+      --muted: #c3b2a5;
+      --radius: 14px;
+      --mono: "JetBrains Mono", "Fira Code", monospace;
+      --sans: "Inter", "Plus Jakarta Sans", "Space Grotesk", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: radial-gradient(1400px 1200px at 10% 0%, rgba(255, 179, 116, 0.12), transparent),
+                  radial-gradient(1000px 900px at 90% 10%, rgba(255, 127, 80, 0.12), transparent),
+                  linear-gradient(180deg, #0f0a07 0%, #1b140f 50%, #0f0a07 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+    @media (max-width: 900px) {
+      body { grid-template-columns: 1fr; }
+      .sidebar { position: fixed; inset: 0 40% 0 0; transform: translateX(-100%); transition: transform 0.3s ease; z-index: 10; }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-toggle { display: inline-flex; }
+    }
+    .sidebar {
+      background: #150f0c;
+      border-right: 1px solid var(--border);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sidebar h2 { margin: 0; font-size: 16px; letter-spacing: 0.08em; }
+    .sidebar button {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      padding: 10px;
+      cursor: pointer;
+    }
+    .chat-list { flex: 1; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+    .chat-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .chat-item.active { background: rgba(255,255,255,0.07); }
+    .main {
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+      grid-template-rows: auto 1fr auto;
+    }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .badge { padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); }
+    .status-accent { color: var(--accent); }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+      backdrop-filter: blur(10px);
+    }
+    .log {
+      height: 55vh;
+      overflow: auto;
+      font-family: var(--mono);
+      white-space: pre-wrap;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: rgba(0,0,0,0.2);
+    }
+    .input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.04);
+      padding: 10px;
+    }
+    #input {
+      flex: 1;
+      min-height: 60px;
+      max-height: 140px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 15px;
+      resize: none;
+      outline: none;
+    }
+    #run {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+      color: #1b0f0a;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .hidden { display: none; }
+    .tutorial {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+    .tutorial-card {
+      background: #1f1610;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <h2>Conversations</h2>
+    <button id="new-chat">New Chat</button>
+    <div class="chat-list" id="chat-list"></div>
+    <div style="border-top:1px solid var(--border); padding-top:10px;">
+      <label style="color:var(--muted); font-size:12px;">Snapshot</label>
+      <input type="file" id="snapshot-file" accept=".json,.snapshot,application/json" style="width:100%; color:var(--muted);">
+      <button id="load-snapshot">Load Snapshot</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <button class="sidebar-toggle hidden" id="toggle-sidebar">☰</button>
+        <div class="muted">N.O.V.A. Chat</div>
+        <div class="badge" id="status">Idle</div>
+      </div>
+      <div class="muted" id="auth-status">Checking auth...</div>
+    </div>
+
+    <div class="panel">
+      <div id="log" class="log"></div>
+    </div>
+
+    <div class="input-wrap">
+      <textarea id="input" placeholder="Type a message... (Shift+Enter for newline)"></textarea>
+      <button id="run">Send</button>
+    </div>
+  </main>
+
+  <div class="tutorial" id="tutorial">
+    <div class="tutorial-card">
+      <h3>Welcome to N.O.V.A.</h3>
+      <p>Left sidebar: chat history & new chat. Bottom bar: type and hit Enter to send.</p>
+      <button id="close-tutorial">Got it</button>
+    </div>
+  </div>
+
+  <script>
+    // Auth redirect check
+    const authKey = "nova_authed";
+    const params = new URLSearchParams(window.location.search);
+    if (!localStorage.getItem(authKey)) {
+      const code = params.get("code");
+      if (!code) {
+        window.location.href = "https://auth.tyloai.com/authorize?client_id=tylo_id_NvN9Bxj3bFuk3k1I44CI7KBM&redirect_uri=https://nova.protoethik.com/app.html&state=123";
+      } else {
+        localStorage.setItem(authKey, "1");
+        history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+    document.getElementById("auth-status").textContent = "Auth OK";
+
+    window.SKIP_TRAINING = false;              // fallback to train on default if no snapshot
+    window.novaDeferBootstrap = true;          // start manually / auto after snapshot or fallback
+    window.novaOverrides = { enableHeuristics: false };
+
+    let chats = JSON.parse(localStorage.getItem("nova_chats") || "[]");
+    let currentId = chats[0]?.id || null;
+    const logEl = document.getElementById("log");
+    const statusEl = document.getElementById("status");
+    const inputEl = document.getElementById("input");
+    const chatListEl = document.getElementById("chat-list");
+    const tutorial = document.getElementById("tutorial");
+    if (localStorage.getItem("nova_tutorial_done")) tutorial.classList.add("hidden");
+
+    function renderChats() {
+      chatListEl.innerHTML = "";
+      chats.forEach((c) => {
+        const div = document.createElement("div");
+        div.className = "chat-item" + (c.id === currentId ? " active" : "");
+        div.textContent = c.title || "Untitled";
+        div.onclick = () => { currentId = c.id; saveChats(); renderChats(); renderLog(); };
+        chatListEl.appendChild(div);
+      });
+    }
+    function saveChats() { localStorage.setItem("nova_chats", JSON.stringify(chats)); }
+    function ensureChat() {
+      if (!currentId) {
+        const id = crypto.randomUUID();
+        currentId = id;
+        chats.unshift({ id, title: "New chat", messages: [] });
+        saveChats();
+      }
+    }
+    function renderLog() {
+      ensureChat();
+      const chat = chats.find((c) => c.id === currentId);
+      logEl.textContent = "";
+      chat.messages.forEach((m) => {
+        logEl.textContent += `${m.role.toUpperCase()}: ${m.text}\n\n`;
+      });
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    document.getElementById("new-chat").onclick = () => {
+      const id = crypto.randomUUID();
+      chats.unshift({ id, title: "New chat", messages: [] });
+      currentId = id;
+      saveChats(); renderChats(); renderLog();
+    };
+    document.getElementById("close-tutorial").onclick = () => {
+      tutorial.classList.add("hidden");
+      localStorage.setItem("nova_tutorial_done", "1");
+    };
+    const toggleBtn = document.getElementById("toggle-sidebar");
+    if (window.innerWidth < 900 && toggleBtn) {
+      toggleBtn.classList.remove("hidden");
+      toggleBtn.onclick = () => document.getElementById("sidebar").classList.toggle("open");
+    }
+
+    async function loadSnapshotFromFile(fileInput) {
+      const file = fileInput.files?.[0];
+      if (!file) return null;
+      const text = await file.text();
+      return JSON.parse(text);
+    }
+
+    const startIfReady = () => {
+      if (window.startNova) {
+        statusEl.textContent = "Booting...";
+        window.startNova();
+      } else {
+        setTimeout(startIfReady, 200);
+      }
+    };
+
+    document.getElementById("load-snapshot").onclick = async () => {
+      try {
+        const snap = await loadSnapshotFromFile(document.getElementById("snapshot-file"));
+        if (!snap) { statusEl.textContent = "No snapshot"; return; }
+        window.novaOverrides.manualSnapshot = snap;
+        statusEl.textContent = "Snapshot ready";
+        startIfReady();
+      } catch (e) {
+        statusEl.textContent = "Snapshot failed";
+      }
+    };
+
+    // Live learning toggle + notes
+    const liveLearnKey = "nova_live_learn";
+    let liveLearn = localStorage.getItem(liveLearnKey) === "1";
+    const userNotes = JSON.parse(localStorage.getItem("nova_notes") || "[]");
+    const liveToggle = document.createElement("label");
+    liveToggle.style.color = "var(--muted)";
+    liveToggle.style.fontSize = "12px";
+    liveToggle.innerHTML = `<input type="checkbox" id="live-toggle" ${liveLearn ? "checked" : ""}> Live Learning`;
+    document.querySelector(".topbar").appendChild(liveToggle);
+    document.getElementById("live-toggle").onchange = (e) => {
+      liveLearn = e.target.checked;
+      localStorage.setItem(liveLearnKey, liveLearn ? "1" : "0");
+    };
+
+    const MAX_CONTEXT = 8;
+    function buildPrompt(raw) {
+      ensureChat();
+      const chat = chats.find((c) => c.id === currentId);
+      const ctx = chat.messages.slice(-MAX_CONTEXT * 2).map((m) => `${m.role === "user" ? "User" : "AI"}: ${m.text}`).join("\n");
+      const notes = liveLearn && userNotes.length ? `\nNotes: ${userNotes.join(" | ")}` : "";
+      return ctx ? `${ctx}${notes}\nUser: ${raw}\nAI:` : `${notes ? notes + "\n" : ""}User: ${raw}\nAI:`;
+    }
+
+    function appendMessage(role, text) {
+      ensureChat();
+      const chat = chats.find((c) => c.id === currentId);
+      chat.messages.push({ role, text });
+      if (!chat.title && role === "user") chat.title = text.slice(0, 30);
+      saveChats(); renderLog();
+    }
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById("run").click();
+      }
+    });
+    document.getElementById("run").addEventListener("click", () => {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      appendMessage("user", text);
+      if (liveLearn) {
+        userNotes.push(text);
+        localStorage.setItem("nova_notes", JSON.stringify(userNotes.slice(-50)));
+      }
+      inputEl.value = buildPrompt(text); // feed context to main.js handler
+    }, true);
+
+    // Fallback: if no snapshot provided, auto boot to train on default data
+    setTimeout(() => {
+      if (!window.novaOverrides.manualSnapshot) {
+        statusEl.textContent = "Booting (default training)...";
+        startIfReady();
+      }
+    }, 500);
+
+    renderChats();
+    renderLog();
+  </script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

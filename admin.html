@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N.O.V.A. Admin</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0d1a;
+      --sidebar: #0f152a;
+      --panel: #12192f;
+      --border: rgba(255,255,255,0.08);
+      --accent: #4ae0ff;
+      --accent-2: #9c6bff;
+      --text: #e7edff;
+      --muted: #9fb3d7;
+      --radius: 14px;
+      --sans: "Inter", "Space Grotesk", "Sora", sans-serif;
+      --mono: "JetBrains Mono", "Fira Code", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: linear-gradient(135deg, #0a0d1a 0%, #0d1326 50%, #0a0d1a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+    }
+    .sidebar {
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .sidebar h1 { margin: 0; font-size: 18px; letter-spacing: 0.1em; }
+    .badge { display: inline-block; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.06); }
+    .muted { color: var(--muted); font-size: 13px; }
+    .block {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: rgba(255,255,255,0.04);
+    }
+    .block h3 { margin: 0 0 6px; font-size: 14px; letter-spacing: 0.08em; }
+    .block button, .block input, .block textarea {
+      width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 10px;
+      font-family: var(--sans);
+    }
+    .block button {
+      border: none;
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+      color: #0b0f1d;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .main {
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+      grid-template-rows: auto 1fr auto;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+    .log {
+      height: 50vh;
+      overflow: auto;
+      font-family: var(--mono);
+      white-space: pre-wrap;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: rgba(0,0,0,0.25);
+    }
+    .chat-input {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.04);
+      padding: 10px;
+    }
+    #input {
+      flex: 1;
+      min-height: 60px;
+      max-height: 140px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      resize: none;
+      outline: none;
+    }
+    #run {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+      color: #0b0f1d;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    #training-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      color: var(--text);
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div>
+      <h1>N.O.V.A. Admin</h1>
+      <div class="badge" id="status">Idle</div>
+      <div class="muted">Auto-trains on load from ./data/training_data.txt</div>
+    </div>
+    <div class="block">
+      <h3>Training</h3>
+      <div class="muted">Upload a corpus (same format as training_data.txt) to retrain.</div>
+      <input type="file" id="train-file" accept=".txt,text/plain">
+      <button id="retrain" style="margin-top:8px;">Retrain with Upload</button>
+    </div>
+    <div class="block">
+      <h3>Snapshot</h3>
+      <input type="file" id="snapshot-file" accept=".json,.snapshot,application/json">
+      <button id="load-snapshot" style="margin-top:8px;">Load Snapshot</button>
+      <button id="export-snapshot" style="margin-top:8px;">Export Snapshot</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="panel">
+      <h3 style="margin:0 0 6px;">Log</h3>
+      <div class="log" id="log"></div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin:0 0 6px;">Chat</h3>
+      <div class="chat-input">
+        <textarea id="input" placeholder="Enter prompt"></textarea>
+        <button id="run">Send</button>
+      </div>
+    </div>
+  </main>
+
+  <div id="training-mask">Training in progress...</div>
+
+  <script>
+    window.novaDeferBootstrap = true;
+    window.novaOverrides = { enableHeuristics: false };
+    window.SKIP_TRAINING = false;
+    const statusEl = document.getElementById("status");
+    const logEl = document.getElementById("log");
+    const mask = document.getElementById("training-mask");
+    const logLine = (msg) => logEl.textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n` + logEl.textContent;
+
+    const snapshotFile = document.getElementById("snapshot-file");
+    const trainFile = document.getElementById("train-file");
+
+    const observer = new MutationObserver(() => {
+      const txt = statusEl.textContent.toLowerCase();
+      if (txt.includes("ready") || txt.includes("complete")) {
+        mask.style.display = "none";
+      }
+    });
+    observer.observe(statusEl, { childList: true });
+
+    const bootNova = () => {
+      if (window.startNova) {
+        statusEl.textContent = "Booting & Training...";
+        mask.style.display = "flex";
+        window.startNova();
+      } else {
+        setTimeout(bootNova, 200);
+      }
+    };
+
+    document.getElementById("retrain").onclick = async () => {
+      const file = trainFile.files?.[0];
+      if (file) {
+        const text = await file.text();
+        window.novaOverrides.trainingText = text;
+        logLine(`Training text loaded: ${file.name}`);
+      } else {
+        delete window.novaOverrides.trainingText;
+        logLine("No upload; using default ./data/training_data.txt");
+      }
+      window.SKIP_TRAINING = false;
+      bootNova();
+    };
+
+    document.getElementById("load-snapshot").onclick = async () => {
+      const file = snapshotFile.files?.[0];
+      if (!file) return logLine("No snapshot selected");
+      const text = await file.text();
+      try {
+        const json = JSON.parse(text);
+        window.novaOverrides.manualSnapshot = json;
+        window.SKIP_TRAINING = true;
+        logLine(`Loaded snapshot: ${file.name}`);
+        bootNova();
+      } catch (err) {
+        logLine("Snapshot parse failed: " + err.message);
+      }
+    };
+
+    document.getElementById("export-snapshot").onclick = () => {
+      if (window.saveSnapshot && window.downloadSnapshot && window.__fastLayer && window.__tokenizer) {
+        saveSnapshot(window.__fastLayer, window.__tokenizer).then((snap) => {
+          downloadSnapshot(snap, "model.snapshot");
+          logLine("Snapshot export triggered");
+        }).catch((err) => logLine("Export failed: " + err.message));
+      } else {
+        logLine("Model not ready for export");
+      }
+    };
+
+    // auto boot on load
+    bootNova();
+  </script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
