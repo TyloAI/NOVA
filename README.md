@@ -8,11 +8,8 @@
 Building AI that thinks deeply and acts responsibly.
 </p>
 
-[![Website](https://img.shields.io/badge/Company_Website-8A2BE2?style=for-the-badge&logo=ethereum)](https://protoethik.com)
+[![Full Paper](https://img.shields.io/badge/📄-Paper-blue)](https://doi.org/10.5281/zenodo.18366793)
 
-[![TyloAI](https://img.shields.io/badge/TyloAI_Chat-10a37f?style=for-the-badge&logo=openai)](https://tyloai.com)
-
-[![CLI](https://img.shields.io/badge/ode--code_CLI-3498db?style=for-the-badge&logo=terminal)](https://docs.tyloai.com/ode-code.html)
 ---
 
 ![WebGPU Required](https://img.shields.io/badge/Hardware-WebGPU%20Required-e65100?style=for-the-badge&logo=webgpu)
@@ -20,7 +17,6 @@ Building AI that thinks deeply and acts responsibly.
 ![Memory](https://img.shields.io/badge/Architecture-Hebbian%20Fast%20Weights-3949ab?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-AGPL%20v3.0-2e7d32?style=for-the-badge)
 ![Version](https://img.shields.io/badge/Version-0.1.0-blue?style=for-the-badge)
-[Paper](https://doi.org/10.5281/zenodo.18366793)
 
 # N.O.V.A.
 ### Native Object Vector Architecture
