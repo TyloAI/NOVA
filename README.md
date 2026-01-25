@@ -20,6 +20,7 @@ Building AI that thinks deeply and acts responsibly.
 ![Memory](https://img.shields.io/badge/Architecture-Hebbian%20Fast%20Weights-3949ab?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-AGPL%20v3.0-2e7d32?style=for-the-badge)
 ![Version](https://img.shields.io/badge/Version-0.1.0-blue?style=for-the-badge)
+[Paper](https://doi.org/10.5281/zenodo.18366793)
 
 # N.O.V.A.
 ### Native Object Vector Architecture
@@ -142,3 +143,15 @@ $$
 ## 6. License
 Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). Copyright © 2026 Protoethik Co., Ltd.
 Use, modification, and networked deployment must comply with AGPL-3.0, including source disclosure requirements.
+
+---
+
+## 7. Citation
+
+If you use this work in your research, please cite:
+
+```bibtex
+Wu, Y. (2026). Context Is Geometry (1.0). Zenodo. https://doi.org/10.5281/zenodo.18366793
+```
+
+**Direct link**: [https://doi.org/10.5281/zenodo.18366793](https://doi.org/10.5281/zenodo.18366793)
