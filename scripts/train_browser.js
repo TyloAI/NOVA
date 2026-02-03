@@ -7,6 +7,9 @@ export async function quickstartTraining(lines, ctx, fastLayer, tokenizer, opts 
   const positionStride = Math.max(1, Math.floor(opts.positionStride ?? 1));
   const userStride = Math.max(1, Math.floor(opts.userStride ?? 1));
   const mode = opts.mode ?? "plain";
+  const isChatMode = mode === "chat";
+  const progressCb = typeof opts.progressCb === "function" ? opts.progressCb : null;
+  const progressEvery = Math.max(1, Math.floor(opts.progressEvery ?? 200));
   const userContextWeight = opts.userContextWeight ?? 0.25;
   const userContextLimit = Math.max(0, Math.floor(opts.userContextLimit ?? 8));
   const codeBoost = Math.max(1, Math.floor(opts.codeBoost ?? 1));
@@ -17,11 +20,60 @@ export async function quickstartTraining(lines, ctx, fastLayer, tokenizer, opts 
   const totalLines = lines.length;
   const logEvery = Math.max(0, Math.floor(opts.logEvery ?? 0));
   const yieldEvery = Math.max(0, Math.floor(opts.yieldEvery ?? 0));
+  const yieldIntervalMs = Math.max(0, Math.floor(opts.yieldIntervalMs ?? 0));
+  const timeSource = (typeof performance !== "undefined" && performance.now)
+    ? () => performance.now()
+    : () => Date.now();
   const yieldToUI = () => new Promise((resolve) => setTimeout(resolve, 0));
+  const autoYieldMs = yieldIntervalMs || (yieldEvery > 0 ? 0 : 50);
+  let lastYieldMs = timeSource();
+  const maybeAutoYield = async () => {
+    if (autoYieldMs <= 0) return;
+    const now = timeSource();
+    if (now - lastYieldMs >= autoYieldMs) {
+      await yieldToUI();
+      lastYieldMs = timeSource();
+    }
+  };
   
   for (let i = 0; i <= contextWindow; i += 1) {
     contextWeights.push(Math.pow(contextDecay, i));
   }
+
+  const aiTokenId = isChatMode ? tokenizer.vocab.get("AI:") : null;
+  const preparedLines = lines.map((line) => {
+    const repeats = /\b(code|javascript|function)\b/i.test(line) ? codeBoost : 1;
+    if (!isChatMode) {
+      return {
+        repeats,
+        tokens: tokenizer.tokenize(line, { addBos: true, addEos: true })
+      };
+    }
+    const marker = " AI:";
+    const idx = line.indexOf(marker);
+    if (idx === -1) {
+      return { repeats, tokens: null, aiStartIndex: -1 };
+    }
+    const userPart = line.slice(0, idx).replace(/^User:/i, "").trim();
+    const aiPart = line.slice(idx + marker.length).trim();
+    if (!aiPart) {
+      return { repeats, tokens: null, aiStartIndex: -1 };
+    }
+    const isTaskLine = instructionPromptPattern.test(userPart);
+    const modeLabel = isTaskLine ? "task" : "chat";
+    const fullText = `Mode: ${modeLabel} User: ${userPart} AI: ${aiPart}`;
+    const fullTokens = tokenizer.tokenize(fullText, { addBos: true, addEos: true });
+    let aiStartIndex = -1;
+    if (aiTokenId !== undefined && aiTokenId !== null) {
+      for (let i = 0; i < fullTokens.length; i += 1) {
+        if (fullTokens[i] === aiTokenId) {
+          aiStartIndex = i + 1;
+          break;
+        }
+      }
+    }
+    return { repeats, tokens: fullTokens, aiStartIndex };
+  });
 
   console.log(">>> SURGICAL TRAINING STARTED <<<");
   
@@ -29,35 +81,30 @@ export async function quickstartTraining(lines, ctx, fastLayer, tokenizer, opts 
     console.log(`Epoch ${epoch + 1}/${epochs}`);
     for (let lineIdx = 0; lineIdx < lines.length; lineIdx += 1) {
       const line = lines[lineIdx];
+      const prepared = preparedLines[lineIdx];
+      if (progressCb && ((lineIdx % progressEvery === 0) || lineIdx === lines.length - 1)) {
+        const pct = (lineIdx + 1) / totalLines;
+        const overall = (epoch + pct) / epochs;
+        progressCb({
+          epoch: epoch + 1,
+          epochs,
+          line: lineIdx + 1,
+          totalLines,
+          epochPercent: pct,
+          overallPercent: overall
+        });
+      }
       
       if (logEvery > 0 && lineIdx % logEvery === 0) {
         console.log(`Learning sequence ${lineIdx + 1}/${totalLines}: "${line}"`);
       }
       
-      const repeats = /\b(code|javascript|function)\b/i.test(line) ? codeBoost : 1;
+      const repeats = prepared?.repeats ?? 0;
       for (let r = 0; r < repeats; r += 1) {
-        if (mode === "chat") {
-          const marker = " AI:";
-          const idx = line.indexOf(marker);
-          if (idx === -1) continue;
-          const userPart = line.slice(0, idx).replace(/^User:/i, "").trim();
-          const aiPart = line.slice(idx + marker.length).trim();
-          if (!aiPart) continue;
-
-          const isTaskLine = instructionPromptPattern.test(userPart);
-          const modeLabel = isTaskLine ? "task" : "chat";
-          const fullText = `Mode: ${modeLabel} User: ${userPart} AI: ${aiPart}`;
-          const fullTokens = tokenizer.tokenize(fullText, { addBos: true, addEos: true });
-          const aiTokenId = tokenizer.vocab.get("AI:");
-          let aiStartIndex = -1;
-          if (aiTokenId !== undefined) {
-            for (let i = 0; i < fullTokens.length; i += 1) {
-              if (fullTokens[i] === aiTokenId) {
-                aiStartIndex = i + 1;
-                break;
-              }
-            }
-          }
+        if (isChatMode) {
+          const fullTokens = prepared?.tokens;
+          if (!fullTokens) continue;
+          const aiStartIndex = prepared?.aiStartIndex ?? -1;
 
           for (let i = 0; i < fullTokens.length - 1; i += tokenStride) {
             const prevToken = fullTokens[i];
@@ -71,7 +118,8 @@ export async function quickstartTraining(lines, ctx, fastLayer, tokenizer, opts 
             });
           }
         } else {
-          const tokens = tokenizer.tokenize(line, { addBos: true, addEos: true });
+          const tokens = prepared?.tokens;
+          if (!tokens) continue;
 
           for (let i = 0; i < tokens.length - 1; i += tokenStride) {
             const prevToken = tokens[i];
@@ -88,6 +136,9 @@ export async function quickstartTraining(lines, ctx, fastLayer, tokenizer, opts 
       
       if (yieldEvery > 0 && (lineIdx + 1) % yieldEvery === 0) {
         await yieldToUI();
+        lastYieldMs = timeSource();
+      } else {
+        await maybeAutoYield();
       }
     }
   }

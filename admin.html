@@ -3,127 +3,731 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>N.O.V.A. Admin</title>
+  <title>N.O.V.A. Admin Console</title>
   <style>
+    /* ============================================
+       NOVA ADMIN - API CONSOLE STYLE
+       Complete Redesign - Inspired by Modern API Consoles
+       ============================================ */
+
     :root {
-      color-scheme: dark;
-      --bg: #0a0d1a;
-      --sidebar: #0f152a;
-      --panel: #12192f;
-      --border: rgba(255,255,255,0.08);
-      --accent: #4ae0ff;
-      --accent-2: #9c6bff;
-      --text: #e7edff;
-      --muted: #9fb3d7;
-      --radius: 14px;
-      --sans: "Inter", "Space Grotesk", "Sora", sans-serif;
-      --mono: "JetBrains Mono", "Fira Code", monospace;
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --sidebar-bg: #0d1117;
+      --border-color: #30363d;
+      --text-primary: #c9d1d9;
+      --text-secondary: #8b949e;
+      --text-tertiary: #6e7681;
+      --accent-primary: #58a6ff;
+      --accent-secondary: #79c0ff;
+      --accent-tertiary: #1f6feb;
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+      --focus: #388bfd;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+      --mono: "SFMono-Regular", "SF Mono", "Segoe UI Mono", "Roboto Mono", "Courier New", monospace;
     }
-    * { box-sizing: border-box; }
-    body {
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
       margin: 0;
+      padding: 0;
+    }
+
+    body {
       font-family: var(--sans);
-      background: linear-gradient(135deg, #0a0d1a 0%, #0d1326 50%, #0a0d1a 100%);
-      color: var(--text);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 300px 1fr;
+      grid-template-columns: 260px 1fr;
+      gap: 0;
     }
+
+    /* ==================== SIDEBAR ==================== */
     .sidebar {
-      background: var(--sidebar);
-      border-right: 1px solid var(--border);
-      padding: 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background-color: var(--sidebar-bg);
+      border-right: 1px solid var(--border-color);
+      padding: 0;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 0;
     }
-    .sidebar h1 { margin: 0; font-size: 18px; letter-spacing: 0.1em; }
-    .badge { display: inline-block; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.06); }
-    .muted { color: var(--muted); font-size: 13px; }
+
+    .sidebar::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: var(--text-tertiary);
+    }
+
+    /* Sidebar Header */
+    .sidebar h1 {
+      margin: 0;
+      padding: 20px 16px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-tertiary);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    .pill {
+      padding: 3px 6px;
+      border-radius: 12px;
+      border: 1px solid var(--accent-tertiary);
+      background-color: rgba(31, 111, 235, 0.1);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--accent-secondary);
+    }
+
+    .muted {
+      color: var(--text-tertiary);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    /* Sidebar Sections */
     .block {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px;
-      background: rgba(255,255,255,0.04);
+      border: none;
+      border-bottom: 1px solid var(--border-color);
+      border-radius: 0;
+      padding: 0;
+      background: none;
+      box-shadow: none;
     }
-    .block h3 { margin: 0 0 6px; font-size: 14px; letter-spacing: 0.08em; }
-    .block button, .block input, .block textarea {
+
+    .block:last-child {
+      border-bottom: none;
+    }
+
+    .block h3 {
+      margin: 0;
+      padding: 12px 16px 8px;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+    }
+
+    .block button.nav-btn {
       width: 100%;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.06);
-      color: var(--text);
-      padding: 10px;
+      border: none;
+      border-radius: 0;
+      padding: 10px 16px;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .block button.nav-btn:hover {
+      background-color: var(--bg-tertiary);
+      color: var(--accent-secondary);
+    }
+
+    .block button.nav-btn.active {
+      background-color: rgba(88, 166, 255, 0.1);
+      color: var(--accent-primary);
+      border-left-color: var(--accent-primary);
+    }
+
+    /* Sidebar Input & Upload Sections */
+    .block input,
+    .block textarea {
+      width: 100%;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      font-family: var(--sans);
+      font-size: 12px;
+      margin: 0 16px 8px 16px;
+      width: calc(100% - 32px);
+      transition: all 0.2s ease;
+    }
+
+    .block input:focus,
+    .block textarea:focus {
+      border-color: var(--accent-primary);
+      background-color: var(--bg-tertiary);
+      outline: none;
+    }
+
+    .block button:not(.nav-btn) {
+      margin: 8px 16px 12px 16px !important;
+      width: calc(100% - 32px) !important;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: var(--bg-primary) !important;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+
+    .block button:not(.nav-btn):hover {
+      opacity: 0.9;
+    }
+
+    /* ==================== MAIN CONTENT ==================== */
+    .main {
+      display: grid;
+      grid-template-columns: 1fr;
+      overflow-y: auto;
+      background-color: var(--bg-primary);
+    }
+
+    .main::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .main::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .main::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+
+    /* Hide all panels by default */
+    #overview,
+    #controls,
+    #log-panel,
+    #chat-panel,
+    #snapshot-panel,
+    #guide-panel {
+      display: none !important;
+    }
+
+    /* Show active panel */
+    #overview.active,
+    #controls.active,
+    #log-panel.active,
+    #chat-panel.active,
+    #snapshot-panel.active,
+    #guide-panel.active {
+      display: grid !important;
+      grid-template-rows: auto auto 1fr;
+      gap: 24px;
+      padding: 32px;
+      min-height: 100vh;
+    }
+
+    #overview.active {
+      grid-template-rows: auto auto auto 1fr auto;
+    }
+
+    /* Topbar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 0;
+      border-bottom: none;
+      scroll-margin-top: 0;
+    }
+
+    .topbar > div:first-child {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .topbar > div:first-child > div:first-child {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .topbar > div:first-child > div:last-child {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-ghost {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
       font-family: var(--sans);
     }
-    .block button {
-      border: none;
-      background: linear-gradient(120deg, var(--accent), var(--accent-2));
-      color: #0b0f1d;
-      font-weight: 700;
-      cursor: pointer;
+
+    .btn-ghost:hover {
+      background-color: var(--bg-tertiary);
+      border-color: var(--accent-primary);
+      color: var(--accent-secondary);
     }
-    .main {
-      padding: 20px;
+
+    .btn-ghost:active {
+      background-color: rgba(88, 166, 255, 0.1);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
       display: grid;
-      gap: 14px;
-      grid-template-rows: auto 1fr auto;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
     }
+
+    .stat-card {
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-secondary);
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      border-color: var(--accent-primary);
+      background-color: var(--bg-tertiary);
+    }
+
+    .stat-label {
+      color: var(--text-tertiary);
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 6px;
+      color: var(--accent-secondary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-sub {
+      color: var(--text-tertiary);
+      font-size: 12px;
+    }
+
+    /* Panels */
     .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      scroll-margin-top: 32px;
     }
+
+    .panel h3 {
+      margin: 0 0 16px;
+      letter-spacing: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1200px) {
+      .panel-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel-grid .block {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .panel-grid .block h3 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .panel-grid .muted {
+      display: block;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+
+    /* Log Panel */
     .log {
-      height: 50vh;
+      height: 60vh;
       overflow: auto;
       font-family: var(--mono);
       white-space: pre-wrap;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px;
-      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      background-color: #010409;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--success);
     }
+
+    .log::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .log::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .log::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+
+    /* Chat Input */
     .chat-input {
       display: flex;
-      gap: 10px;
-      align-items: center;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: rgba(255,255,255,0.04);
-      padding: 10px;
+      gap: 12px;
+      align-items: flex-end;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      background-color: var(--bg-secondary);
+      padding: 12px;
+      transition: all 0.2s ease;
     }
+
+    .chat-input:focus-within {
+      border-color: var(--accent-primary);
+      background-color: var(--bg-tertiary);
+    }
+
     #input {
       flex: 1;
       min-height: 60px;
       max-height: 140px;
       border: none;
       background: transparent;
-      color: var(--text);
+      color: var(--text-primary);
       resize: none;
       outline: none;
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.5;
     }
+
+    #input::placeholder {
+      color: var(--text-tertiary);
+    }
+
     #run {
       border: none;
-      border-radius: 12px;
-      padding: 12px 14px;
-      background: linear-gradient(120deg, var(--accent), var(--accent-2));
-      color: #0b0f1d;
-      font-weight: 700;
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: var(--bg-primary);
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--sans);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    #run:hover {
+      opacity: 0.9;
+    }
+
+    #run:active {
+      opacity: 0.8;
+    }
+
+    /* Toggles */
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background-color: var(--bg-secondary);
+      transition: all 0.2s ease;
+      margin-bottom: 8px;
+    }
+
+    .toggle:last-child {
+      margin-bottom: 0;
+    }
+
+    .toggle:hover {
+      background-color: var(--bg-tertiary);
+      border-color: var(--accent-primary);
+    }
+
+    .toggle label {
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 500;
       cursor: pointer;
     }
+
+    .toggle input[type="checkbox"] {
+      width: 40px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: var(--accent-primary);
+    }
+
+    /* Guide Steps */
+    .guide {
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      background-color: rgba(88, 166, 255, 0.05);
+      display: grid;
+      gap: 12px;
+    }
+
+    .guide-step {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .guide-step span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      font-weight: 600;
+      color: var(--accent-secondary);
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .guide-step div {
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.6;
+      padding-top: 2px;
+    }
+
+    /* Training Modal */
     #training-mask {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.65);
+      background: rgba(0, 0, 0, 0.8);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 30;
-      color: var(--text);
+      color: var(--text-primary);
       font-size: 18px;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .train-card {
+      width: min(720px, 96vw);
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .train-title {
+      font-weight: 700;
+      letter-spacing: 0;
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+
+    .train-meta {
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .train-bars {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .train-row {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      align-items: center;
+      gap: 14px;
+      font-size: 12px;
+    }
+
+    .train-bar {
+      position: relative;
+      width: 100%;
+      height: 8px;
+      background-color: var(--bg-tertiary);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    .train-bar > span {
+      position: absolute;
+      inset: 0;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+      transition: width 0.18s ease;
+      border-radius: 4px;
+    }
+
+    .train-eta {
+      color: var(--text-secondary);
+      font-size: 12px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      line-height: 1.6;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+      body {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 240px;
+        height: 100vh;
+        z-index: 20;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      #overview.active,
+      #controls.active,
+      #log-panel.active,
+      #chat-panel.active,
+      #snapshot-panel.active,
+      #guide-panel.active {
+        padding: 20px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .panel-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .top-actions {
+        width: 100%;
+      }
+
+      .btn-ghost {
+        flex: 1;
+        min-width: 100px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .train-row {
+        grid-template-columns: 80px 1fr;
+      }
+
+      .sidebar {
+        width: 200px;
+      }
     }
   </style>
 </head>
@@ -131,51 +735,322 @@
   <aside class="sidebar">
     <div>
       <h1>N.O.V.A. Admin</h1>
-      <div class="badge" id="status">Idle</div>
-      <div class="muted">Auto-trains on load from ./data/training_data.txt</div>
+      <div class="badge"><span id="status">Idle</span><span class="pill" id="status-mode">training</span></div>
+      <div class="muted" style="padding: 0 16px; margin-top: 8px;">Boot trains on ./data/training_data.txt unless snapshot is loaded.</div>
     </div>
+
+    <div class="block">
+      <h3>Dashboard</h3>
+      <button class="nav-btn" data-panel="overview">📊 Overview</button>
+      <button class="nav-btn" data-panel="controls">⚙️ Controls</button>
+      <button class="nav-btn" data-panel="log-panel">📝 Log</button>
+      <button class="nav-btn" data-panel="chat-panel">💬 Chat</button>
+    </div>
+
+    <div class="block">
+      <h3>Management</h3>
+      <button class="nav-btn" data-panel="snapshot-panel">📦 Snapshots</button>
+      <button class="nav-btn" data-panel="guide-panel">📚 Guide</button>
+    </div>
+
     <div class="block">
       <h3>Training</h3>
-      <div class="muted">Upload a corpus (same format as training_data.txt) to retrain.</div>
+      <div class="muted" style="padding: 0 16px;">Upload a corpus (same format as training_data.txt) to retrain.</div>
       <input type="file" id="train-file" accept=".txt,text/plain">
-      <button id="retrain" style="margin-top:8px;">Retrain with Upload</button>
+      <button id="retrain">Retrain with Upload</button>
     </div>
+
     <div class="block">
       <h3>Snapshot</h3>
       <input type="file" id="snapshot-file" accept=".json,.snapshot,application/json">
-      <button id="load-snapshot" style="margin-top:8px;">Load Snapshot</button>
-      <button id="export-snapshot" style="margin-top:8px;">Export Snapshot</button>
+      <button id="load-snapshot">Load Snapshot</button>
+      <button id="export-snapshot">Export Snapshot</button>
     </div>
   </aside>
 
   <main class="main">
-    <div class="panel">
-      <h3 style="margin:0 0 6px;">Log</h3>
-      <div class="log" id="log"></div>
+    <!-- Overview Panel -->
+    <div id="overview" class="active">
+      <div class="topbar">
+        <div>
+          <div>Operator Dashboard</div>
+          <div>Live Neural Ops</div>
+        </div>
+        <div class="top-actions">
+          <button class="btn-ghost" id="action-restart">Restart & Retrain</button>
+          <button class="btn-ghost" id="action-clear">Clear Local State</button>
+          <button class="btn-ghost" id="action-guide">Show Guide</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Model</div>
+          <div class="stat-value" id="stat-model">--</div>
+          <div class="stat-sub" id="stat-model-sub">Layers • Hidden • Heads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Vocabulary</div>
+          <div class="stat-value" id="stat-vocab">--</div>
+          <div class="stat-sub" id="stat-vocab-sub">SSM + special tokens</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Snapshot</div>
+          <div class="stat-value" id="stat-snapshot">Waiting</div>
+          <div class="stat-sub" id="stat-snapshot-sub">Upload a .snapshot or JSON</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Dataset</div>
+          <div class="stat-value" id="stat-dataset">--</div>
+          <div class="stat-sub" id="stat-dataset-sub">Lines • mode</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Quick Start</h3>
+        <div class="guide">
+          <div class="guide-step"><span>1</span><div>Upload a corpus or a snapshot from the sidebar.</div></div>
+          <div class="guide-step"><span>2</span><div>Hit "Restart & Retrain" to rebuild weights.</div></div>
+          <div class="guide-step"><span>3</span><div>Watch live bars while training runs.</div></div>
+          <div class="guide-step"><span>4</span><div>Chat in the console panel; export snapshot anytime.</div></div>
+        </div>
+      </div>
     </div>
 
-    <div class="panel">
-      <h3 style="margin:0 0 6px;">Chat</h3>
+    <!-- Controls Panel -->
+    <div id="controls">
+      <div class="topbar">
+        <div>
+          <div>Runtime Configuration</div>
+          <div>Advanced Controls</div>
+        </div>
+      </div>
+
+      <div class="panel-grid">
+        <div class="block">
+          <h3>Runtime Toggles</h3>
+          <div class="muted">Apply on next boot</div>
+          <div class="toggle">
+            <label>Token log spam</label>
+            <input type="checkbox" id="toggle-tokens">
+          </div>
+          <div class="toggle">
+            <label>Enable heuristics</label>
+            <input type="checkbox" id="toggle-heuristics">
+          </div>
+          <div class="toggle">
+            <label>Live learning (chat)</label>
+            <input type="checkbox" id="toggle-live">
+          </div>
+        </div>
+        <div class="block">
+          <h3>Quick Reference</h3>
+          <div class="guide">
+            <div class="guide-step"><span>1</span><div>Upload a corpus or a snapshot.</div></div>
+            <div class="guide-step"><span>2</span><div>Hit "Restart & Retrain" to rebuild weights.</div></div>
+            <div class="guide-step"><span>3</span><div>Watch live bars while training runs.</div></div>
+            <div class="guide-step"><span>4</span><div>Chat in the console panel; export snapshot anytime.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log Panel -->
+    <div id="log-panel">
+      <div class="topbar">
+        <div>
+          <div>System Output</div>
+          <div>Live Log</div>
+        </div>
+      </div>
+      <div class="log" id="log"></div>
       <div class="chat-input">
-        <textarea id="input" placeholder="Enter prompt"></textarea>
+        <textarea id="input" placeholder="Enter prompt..."></textarea>
         <button id="run">Send</button>
+      </div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div id="chat-panel">
+      <div class="topbar">
+        <div>
+          <div>Interactive Console</div>
+          <div>Chat Interface</div>
+        </div>
+      </div>
+      <div class="chat-input">
+        <textarea id="input" placeholder="Enter prompt..."></textarea>
+        <button id="run">Send</button>
+      </div>
+    </div>
+
+    <!-- Snapshot Panel -->
+    <div id="snapshot-panel">
+      <div class="topbar">
+        <div>
+          <div>Model Snapshots</div>
+          <div>Persistence</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Snapshot Management</h3>
+        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+          Snapshots allow you to save and restore your model state. Use the buttons in the left sidebar to load existing snapshots or export your current model state.
+        </p>
+        <div style="margin-top: 20px; padding: 16px; background-color: var(--bg-tertiary); border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
+          <div style="font-weight: 600; margin-bottom: 8px;">Current Snapshot Status</div>
+          <div id="stat-snapshot" style="font-size: 14px; color: var(--accent-secondary);">Waiting</div>
+          <div id="stat-snapshot-sub" style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Upload a .snapshot or JSON</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guide Panel -->
+    <div id="guide-panel">
+      <div class="topbar">
+        <div>
+          <div>Documentation</div>
+          <div>User Guide</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Getting Started</h3>
+        <div class="guide" style="margin-bottom: 20px;">
+          <div class="guide-step"><span>1</span><div><strong>Upload Data</strong><br/>Go to the Training section in the sidebar and upload a corpus file (TXT format).</div></div>
+          <div class="guide-step"><span>2</span><div><strong>Configure Runtime</strong><br/>Visit the Controls panel to enable or disable runtime features like token logging or heuristic assists.</div></div>
+          <div class="guide-step"><span>3</span><div><strong>Start Training</strong><br/>Click "Restart & Retrain" to begin the training process. Monitor progress via the Log panel.</div></div>
+          <div class="guide-step"><span>4</span><div><strong>Interact</strong><br/>Use the Chat panel to test your model with prompts and get real-time responses.</div></div>
+          <div class="guide-step"><span>5</span><div><strong>Save Progress</strong><br/>Export snapshots regularly to backup your model state and restore it later.</div></div>
+        </div>
       </div>
     </div>
   </main>
 
-  <div id="training-mask">Training in progress...</div>
+  <div id="training-mask" class="training-mask">
+    <div class="train-card">
+      <div class="train-title">Training in progress...</div>
+      <div class="train-meta" id="train-meta">Waiting for data...</div>
+      <div class="train-bars">
+        <div class="train-row">
+          <div>Overall</div>
+          <div class="train-bar"><span id="bar-overall"></span></div>
+        </div>
+        <div class="train-row">
+          <div>Epoch</div>
+          <div class="train-bar"><span id="bar-epoch"></span></div>
+        </div>
+        <div class="train-row">
+          <div>Line</div>
+          <div class="train-bar"><span id="bar-line"></span></div>
+        </div>
+      </div>
+      <div class="train-eta" id="train-eta">ETA: --</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { novaConfig } from "./nova.config.js";
+    window.novaConfig = window.novaConfig || novaConfig;
+  </script>
 
   <script>
+    // Navigation System
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const panelId = this.dataset.panel;
+        
+        // Remove active class from all panels
+        document.querySelectorAll('#overview, #controls, #log-panel, #chat-panel, #snapshot-panel, #guide-panel').forEach(panel => {
+          panel.classList.remove('active');
+        });
+        
+        // Add active class to selected panel
+        document.getElementById(panelId).classList.add('active');
+        
+        // Update active button styling
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        // Scroll to top of new panel
+        document.querySelector('.main').scrollTop = 0;
+      });
+    });
+
+    // Set overview as default active
+    document.querySelector('[data-panel="overview"]').classList.add('active');
+
+    // Original N.O.V.A. Code
     window.novaDeferBootstrap = true;
-    window.novaOverrides = { enableHeuristics: false };
+    window.novaOverrides = {
+      enableHeuristics: false,
+      disableEntropicCompressor: true,
+      configOverride: {
+        model: {
+          vocabSize: 4096,
+          inputSize: 4096,
+          outputSize: 4096,
+          dModel: 128,
+          heads: 4,
+          headDim: 32,
+          ffnHidden: 256,
+          layers: 4,
+          hiddenSize: 128
+        },
+        training: {
+          epochs: 1,
+          maxLines: 0,
+          shuffle: true,
+          tokenStride: 1,
+          logEvery: 0,
+          yieldEvery: 0,
+          progressEvery: 200
+        },
+        runtime: {
+          thinkingSteps: 6,
+          maxReplyTokens: 80,
+          minReplyTokens: 2,
+          contextWindow: 6,
+          contextDecay: 0.7,
+          userContextWeight: 0.6,
+          userContextLimit: 8,
+          logTokens: false
+        },
+        snapshot: {
+          autoLoad: false
+        }
+      }
+    };
     window.SKIP_TRAINING = false;
     const statusEl = document.getElementById("status");
     const logEl = document.getElementById("log");
     const mask = document.getElementById("training-mask");
+    const barOverall = document.getElementById("bar-overall");
+    const barEpoch = document.getElementById("bar-epoch");
+    const barLine = document.getElementById("bar-line");
+    const trainMeta = document.getElementById("train-meta");
+    const trainEta = document.getElementById("train-eta");
+    const statModel = document.getElementById("stat-model");
+    const statModelSub = document.getElementById("stat-model-sub");
+    const statVocab = document.getElementById("stat-vocab");
+    const statVocabSub = document.getElementById("stat-vocab-sub");
+    const statSnapshot = document.getElementById("stat-snapshot");
+    const statSnapshotSub = document.getElementById("stat-snapshot-sub");
+    const statDataset = document.getElementById("stat-dataset");
+    const statDatasetSub = document.getElementById("stat-dataset-sub");
+    const statusMode = document.getElementById("status-mode");
     const logLine = (msg) => logEl.textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n` + logEl.textContent;
+    let trainingStartMs = null;
 
     const snapshotFile = document.getElementById("snapshot-file");
     const trainFile = document.getElementById("train-file");
+    const exportBtn = document.getElementById("export-snapshot");
+    const loadSnapshotBtn = document.getElementById("load-snapshot");
+    const restartBtn = document.getElementById("action-restart");
+    const clearBtn = document.getElementById("action-clear");
+    const guideBtn = document.getElementById("action-guide");
+    const toggleTokens = document.getElementById("toggle-tokens");
+    const toggleHeuristics = document.getElementById("toggle-heuristics");
+    const toggleLive = document.getElementById("toggle-live");
 
     const observer = new MutationObserver(() => {
       const txt = statusEl.textContent.toLowerCase();
@@ -185,14 +1060,136 @@
     });
     observer.observe(statusEl, { childList: true });
 
+    let booting = false;
     const bootNova = () => {
+      if (booting) return;
       if (window.startNova) {
+        booting = true;
         statusEl.textContent = "Booting & Training...";
+        statusMode.textContent = "training";
         mask.style.display = "flex";
         window.startNova();
       } else {
         setTimeout(bootNova, 200);
       }
+    };
+
+    const formatDuration = (ms) => {
+      if (!ms || ms < 0) return "--";
+      const totalSec = Math.round(ms / 1000);
+      const min = Math.floor(totalSec / 60);
+      const sec = totalSec % 60;
+      if (min > 99) return `${Math.floor(min / 60)}h`;
+      return `${min}m ${sec.toString().padStart(2, "0")}s`;
+    };
+
+    const clampPct = (v) => Math.min(1, Math.max(0, v ?? 0));
+
+    const formatBytes = (bytes) => {
+      if (bytes === undefined || bytes === null) return "";
+      const units = ["B", "KB", "MB", "GB"];
+      let value = bytes;
+      let unitIdx = 0;
+      while (value >= 1024 && unitIdx < units.length - 1) {
+        value /= 1024;
+        unitIdx += 1;
+      }
+      const precision = unitIdx === 0 ? 0 : 1;
+      return `${value.toFixed(precision)} ${units[unitIdx]}`;
+    };
+
+    // Keep export filename stable so clients (index.html) can auto-load it.
+    const deriveSnapshotName = () => "model.snapshot";
+
+    const updateSnapshotStatus = (label, detail = "Upload a .snapshot or JSON") => {
+      statSnapshot.textContent = label;
+      statSnapshotSub.textContent = detail;
+    };
+
+    const updateTrainingProgress = (p) => {
+      mask.style.display = "flex";
+      if (!trainingStartMs) trainingStartMs = Date.now();
+      const overallPct = clampPct(p.overallPercent);
+      const epochPct = clampPct(p.epochPercent);
+      const linePct = clampPct((p.line ?? 0) / (p.totalLines || 1));
+      barOverall.style.width = `${(overallPct * 100).toFixed(1)}%`;
+      barEpoch.style.width = `${(epochPct * 100).toFixed(1)}%`;
+      barLine.style.width = `${(linePct * 100).toFixed(1)}%`;
+      trainMeta.textContent = `Epoch ${p.epoch}/${p.epochs} • Line ${p.line}/${p.totalLines} • Mode ${p.mode ?? "plain"} • Source ${p.source ?? "default"}`;
+      const elapsed = Date.now() - trainingStartMs;
+      const etaMs = overallPct > 0 ? elapsed * (1 / overallPct - 1) : null;
+      trainEta.textContent = `Elapsed ${formatDuration(elapsed)} • ETA ${formatDuration(etaMs)} • Overall ${(overallPct * 100).toFixed(1)}%`;
+      if (p.totalLines) {
+        statDataset.textContent = `${p.totalLines} lines`;
+        statDatasetSub.textContent = `Mode: ${p.mode ?? "plain"} • ${p.source ?? "default"}`;
+      }
+    };
+
+    window.onNovaTrainingProgress = updateTrainingProgress;
+
+    const renderConfigStats = () => {
+      const cfg = window.novaConfig || {};
+      if (cfg.model) {
+        const { layers, hiddenSize, heads, vocabSize } = cfg.model;
+        statModel.textContent = `${layers ?? "?"}L • ${hiddenSize ?? "?"}d • ${heads ?? "?"}h`;
+        statModelSub.textContent = "Layers • Hidden • Heads";
+        statVocab.textContent = vocabSize ? vocabSize.toLocaleString() : "--";
+      }
+      if (cfg.training) {
+        const maxLines = cfg.training.maxLines ?? "?";
+        const maxLabel = (typeof maxLines === "number" && maxLines <= 0) ? "all" : maxLines;
+        statDatasetSub.textContent = `Max ${maxLabel} lines • shuffle ${cfg.training.shuffle ? "on" : "off"}`;
+      }
+      statVocabSub.textContent = "Tokenizer vocab size";
+    };
+
+    const loadDatasetStats = async () => {
+      try {
+        const res = await fetch("./data/training_data.txt");
+        if (!res.ok) throw new Error("fetch failed");
+        const text = await res.text();
+        const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+        statDataset.textContent = `${lines.length} lines`;
+        statDatasetSub.textContent = "Mode: auto-detect chat/plain";
+      } catch (err) {
+        statDataset.textContent = "unknown";
+        statDatasetSub.textContent = "Could not read dataset";
+      }
+    };
+
+    const applyToggleOverrides = () => {
+      window.novaOverrides.logTokens = toggleTokens.checked;
+      window.novaOverrides.enableHeuristics = toggleHeuristics.checked;
+      localStorage.setItem("nova_live_learn", toggleLive.checked ? "1" : "0");
+    };
+
+    const initToggles = () => {
+      const cfg = window.novaConfig || {};
+      toggleTokens.checked = cfg.runtime?.logTokens ?? true;
+      toggleHeuristics.checked = cfg.runtime?.enableHeuristics ?? false;
+      toggleLive.checked = localStorage.getItem("nova_live_learn") === "1";
+      [toggleTokens, toggleHeuristics, toggleLive].forEach((el) => {
+        el.onchange = applyToggleOverrides;
+      });
+      applyToggleOverrides();
+    };
+
+    restartBtn.onclick = () => {
+      window.SKIP_TRAINING = false;
+      logLine("Restarting and retraining...");
+      bootNova();
+    };
+
+    clearBtn.onclick = () => {
+      const ok = confirm("Clear local storage (chats, notes, tutorial state)?");
+      if (ok) {
+        localStorage.clear();
+        logLine("Local storage cleared.");
+      }
+    };
+
+    guideBtn.onclick = () => {
+      alert("Guide:\n1) Upload corpus or snapshot.\n2) Toggle runtime knobs.\n3) Hit restart & retrain.\n4) Watch live progress bars.\n5) Chat in panel and export snapshot.");
     };
 
     document.getElementById("retrain").onclick = async () => {
@@ -209,31 +1206,92 @@
       bootNova();
     };
 
-    document.getElementById("load-snapshot").onclick = async () => {
+    loadSnapshotBtn.onclick = async () => {
       const file = snapshotFile.files?.[0];
-      if (!file) return logLine("No snapshot selected");
-      const text = await file.text();
+      if (!file) {
+        logLine("No snapshot selected");
+        return;
+      }
+      updateSnapshotStatus("Decoding...", file.name);
+      let buffer;
       try {
-        const json = JSON.parse(text);
-        window.novaOverrides.manualSnapshot = json;
+        buffer = await file.arrayBuffer();
+      } catch (err) {
+        logLine("Snapshot read failed: " + err.message);
+        updateSnapshotStatus("Load failed", "Could not read file");
+        return;
+      }
+      let snap = null;
+      if (window.decodeSnapshotBuffer) {
+        snap = await window.decodeSnapshotBuffer(buffer);
+      }
+      if (!snap) {
+        try {
+          const text = new TextDecoder().decode(new Uint8Array(buffer));
+          snap = JSON.parse(text);
+        } catch (err) {
+          logLine("Snapshot parse failed: " + err.message);
+          updateSnapshotStatus("Load failed", err.message);
+          return;
+        }
+      }
+      try {
+        window.novaOverrides.manualSnapshot = snap;
         window.SKIP_TRAINING = true;
-        logLine(`Loaded snapshot: ${file.name}`);
+        const detail = `${file.name}${file.size ? ` • ${formatBytes(file.size)}` : ""}`;
+        logLine(`Loaded snapshot: ${detail}`);
+        updateSnapshotStatus("Loaded", detail);
         bootNova();
       } catch (err) {
         logLine("Snapshot parse failed: " + err.message);
+        updateSnapshotStatus("Load failed", err.message);
       }
     };
 
-    document.getElementById("export-snapshot").onclick = () => {
-      if (window.saveSnapshot && window.downloadSnapshot && window.__fastLayer && window.__tokenizer) {
-        saveSnapshot(window.__fastLayer, window.__tokenizer).then((snap) => {
-          downloadSnapshot(snap, "model.snapshot");
-          logLine("Snapshot export triggered");
-        }).catch((err) => logLine("Export failed: " + err.message));
-      } else {
+    exportBtn.onclick = async () => {
+      if (!(window.saveSnapshot && window.downloadSnapshot && window.__fastLayer && window.__tokenizer)) {
         logLine("Model not ready for export");
+        updateSnapshotStatus("Not ready", "Boot or load a snapshot before exporting");
+        return;
+      }
+      exportBtn.disabled = true;
+      const prevText = exportBtn.textContent;
+      exportBtn.textContent = "Exporting...";
+      try {
+        const filename = deriveSnapshotName();
+        logLine(`Exporting snapshot to ${filename}...`);
+        updateSnapshotStatus("Exporting...", filename);
+        const snap = await saveSnapshot(window.__fastLayer, window.__tokenizer);
+        downloadSnapshot(snap, filename);
+        logLine("Snapshot export triggered");
+        updateSnapshotStatus("Exported", `${filename} (download)`);
+      } catch (err) {
+        logLine("Export failed: " + err.message);
+        updateSnapshotStatus("Export failed", err.message);
+      } finally {
+        exportBtn.disabled = false;
+        exportBtn.textContent = prevText;
       }
     };
+
+    const syncStatusMode = (txt) => {
+      const lowered = txt.toLowerCase();
+      if (lowered.includes("training")) {
+        statusMode.textContent = "training";
+      } else if (lowered.includes("ready")) {
+        statusMode.textContent = "ready";
+      } else {
+        statusMode.textContent = "idle";
+      }
+    };
+
+    const statusObserver = new MutationObserver(() => syncStatusMode(statusEl.textContent));
+    statusObserver.observe(statusEl, { childList: true });
+
+    renderConfigStats();
+    loadDatasetStats();
+    initToggles();
+    syncStatusMode(statusEl.textContent);
 
     // auto boot on load
     bootNova();

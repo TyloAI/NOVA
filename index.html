@@ -6,332 +6,543 @@
   <title>N.O.V.A. Chat</title>
   <style>
     :root {
-      color-scheme: dark;
-      --bg: #0f0a07;
-      --panel: #1a1410;
-      --border: rgba(255, 235, 205, 0.16);
-      --accent: #ffb374;
-      --accent-2: #ff7f50;
-      --text: #f5e9df;
-      --muted: #c3b2a5;
-      --radius: 14px;
-      --mono: "JetBrains Mono", "Fira Code", monospace;
-      --sans: "Inter", "Plus Jakarta Sans", "Space Grotesk", sans-serif;
+      --bg: #f9f8f6; /* 柔和的米白色背景 */
+      --sidebar-bg: #f0eee9;
+      --panel: #ffffff;
+      --text: #2c2c2c;
+      --text-muted: #666;
+      --accent: #000000;
+      --user-msg-bg: #e3f2fd; /* 用户消息浅蓝色 */
+      --border: #e0e0e0;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.05);
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
+
     * { box-sizing: border-box; }
+    
     body {
       margin: 0;
-      font-family: var(--sans);
-      background: radial-gradient(1400px 1200px at 10% 0%, rgba(255, 179, 116, 0.12), transparent),
-                  radial-gradient(1000px 900px at 90% 10%, rgba(255, 127, 80, 0.12), transparent),
-                  linear-gradient(180deg, #0f0a07 0%, #1b140f 50%, #0f0a07 100%);
+      font-family: var(--font-sans);
+      background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 280px 1fr;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
     }
-    @media (max-width: 900px) {
-      body { grid-template-columns: 1fr; }
-      .sidebar { position: fixed; inset: 0 40% 0 0; transform: translateX(-100%); transition: transform 0.3s ease; z-index: 10; }
-      .sidebar.open { transform: translateX(0); }
-      .sidebar-toggle { display: inline-flex; }
-    }
+
+    /* 侧边栏样式 */
     .sidebar {
-      background: #150f0c;
+      width: 260px;
+      background: var(--sidebar-bg);
       border-right: 1px solid var(--border);
-      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      transform: translateX(-100%);
+      position: absolute;
+      top: 0; bottom: 0; left: 0;
+      z-index: 100;
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     }
-    .sidebar h2 { margin: 0; font-size: 16px; letter-spacing: 0.08em; }
-    .sidebar button {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: rgba(255,255,255,0.04);
-      color: var(--text);
-      padding: 10px;
-      cursor: pointer;
+    
+    .sidebar.open { transform: translateX(0); }
+    
+    /* 大屏幕下侧边栏默认显示逻辑可按需调整，这里默认收起需点击打开，或配合JS做响应式 */
+    @media (min-width: 900px) {
+      .sidebar { position: relative; transform: translateX(0); box-shadow: none; }
+      .sidebar-toggle { display: none; } /* 大屏可选择隐藏切换按钮 */
     }
-    .chat-list { flex: 1; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); }
-    .chat-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
-    .chat-item.active { background: rgba(255,255,255,0.07); }
-    .main {
+
+    .sidebar-header {
       padding: 20px;
-      display: grid;
-      gap: 14px;
-      grid-template-rows: auto 1fr auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .badge { padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); }
-    .status-accent { color: var(--accent); }
-    .panel {
+
+    .new-chat-btn {
+      margin: 0 15px;
+      padding: 10px;
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px;
-      box-shadow: 0 18px 40px rgba(0,0,0,0.35);
-      backdrop-filter: blur(10px);
-    }
-    .log {
-      height: 55vh;
-      overflow: auto;
-      font-family: var(--mono);
-      white-space: pre-wrap;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px;
-      background: rgba(0,0,0,0.2);
-    }
-    .input-wrap {
+      border-radius: 8px;
+      cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 10px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: rgba(255,255,255,0.04);
-      padding: 10px;
+      gap: 8px;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.2s;
     }
+    .new-chat-btn:hover { background: #fff; box-shadow: var(--shadow); }
+
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .chat-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: background 0.2s;
+    }
+    .chat-item:hover { background: rgba(0,0,0,0.05); color: var(--text); }
+    .chat-item.active { background: #e0e0e0; color: var(--accent); font-weight: 600; }
+
+    /* 主区域 */
+    .main {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--bg);
+    }
+
+    .topbar {
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .toggle-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 6px;
+    }
+    .toggle-btn:hover { background: rgba(0,0,0,0.05); }
+
+    /* 聊天记录区域 */
+    .chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 0;
+      scroll-behavior: smooth;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .messages-wrapper {
+      width: 100%;
+      max-width: 800px;
+      padding: 0 20px;
+      padding-bottom: 120px; /* 给底部输入框留空间 */
+    }
+
+    .message {
+      margin-bottom: 30px;
+      line-height: 1.6;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .message.user {
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    .message.user .bubble {
+      background: var(--user-msg-bg);
+      padding: 12px 18px;
+      border-radius: 18px 18px 4px 18px;
+      color: var(--text);
+      max-width: 80%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .message.ai {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    
+    .message.ai .bubble {
+      background: transparent;
+      padding: 0;
+      color: var(--text);
+      max-width: 100%;
+    }
+
+    /* AI 下方的工具栏 (复制/朗读/重试) */
+    .msg-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 5px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .message.ai:hover .msg-actions { opacity: 1; } /* 悬停显示 */
+
+    .action-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { background: #fff; color: var(--accent); border-color: #bbb; }
+    
+    /* 输入框区域 - 核心交互 */
+    .input-area {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      background: linear-gradient(to top, var(--bg) 80%, transparent);
+      transition: all 0.5s ease;
+    }
+
+    /* 当没有消息时（初始状态），输入框居中 */
+    .main.empty .input-area {
+      top: 0; bottom: 0;
+      align-items: center;
+      background: var(--bg);
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .main.empty .welcome-text { display: block; }
+    .welcome-text { display: none; text-align: center; margin-bottom: 20px; }
+    .welcome-text h1 { font-size: 32px; font-weight: 500; margin: 0 0 10px 0; color: #2c2c2c; }
+    
+    .input-box {
+      width: 100%;
+      max-width: 700px;
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border: 1px solid transparent;
+      padding: 10px 15px;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      transition: all 0.3s;
+    }
+    .input-box:focus-within {
+      border-color: #d0d0d0;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+    }
+
     #input {
       flex: 1;
-      min-height: 60px;
-      max-height: 140px;
       border: none;
-      background: transparent;
-      color: var(--text);
-      font-size: 15px;
       resize: none;
+      padding: 12px 5px;
+      font-family: var(--font-sans);
+      font-size: 16px;
       outline: none;
+      max-height: 200px;
+      min-height: 24px;
+      color: var(--text);
     }
+
     #run {
+      background: #e0e0e0;
       border: none;
-      border-radius: 12px;
-      padding: 12px 14px;
-      background: linear-gradient(120deg, var(--accent), var(--accent-2));
-      color: #1b0f0a;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .hidden { display: none; }
-    .tutorial {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 20;
+      cursor: pointer;
+      color: #555;
+      transition: background 0.2s;
     }
-    .tutorial-card {
-      background: #1f1610;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      max-width: 420px;
-      text-align: center;
-      box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-    }
+    #run:hover { background: #000; color: #fff; }
+    #run svg { width: 18px; height: 18px; fill: currentColor; }
+
+    /* 隐藏元素 */
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
+
   <aside class="sidebar" id="sidebar">
-    <h2>Conversations</h2>
-    <button id="new-chat">New Chat</button>
-    <div class="chat-list" id="chat-list"></div>
-    <div style="border-top:1px solid var(--border); padding-top:10px;">
-      <label style="color:var(--muted); font-size:12px;">Snapshot</label>
-      <input type="file" id="snapshot-file" accept=".json,.snapshot,application/json" style="width:100%; color:var(--muted);">
-      <button id="load-snapshot">Load Snapshot</button>
+    <div class="sidebar-header">
+      <span style="font-weight:700; letter-spacing:-0.5px;">N.O.V.A.</span>
+      <button class="toggle-btn" onclick="toggleSidebar()" style="background:none; border:none; cursor:pointer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="new-chat-btn" id="new-chat">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      New Chat
+    </div>
+    <div class="chat-list" id="chat-list">
+      </div>
+    
+    <div style="padding: 15px; border-top:1px solid var(--border);">
+      <label style="font-size:12px; color:var(--text-muted); display:block; line-height:1.6;">
+        Snapshot auto-loads locally at startup. Place <code>model.snapshot</code> beside this page.
+      </label>
     </div>
   </aside>
 
-  <main class="main">
+  <main class="main empty" id="main-container">
     <div class="topbar">
-      <div>
-        <button class="sidebar-toggle hidden" id="toggle-sidebar">☰</button>
-        <div class="muted">N.O.V.A. Chat</div>
-        <div class="badge" id="status">Idle</div>
+      <button class="toggle-btn" onclick="toggleSidebar()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div id="status" style="font-size:12px; color:var(--text-muted); background:rgba(0,0,0,0.05); padding:4px 8px; border-radius:12px;">Idle</div>
+    </div>
+
+    <div class="chat-container" id="scroll-container">
+      <div class="welcome-text">
+        <h1>Hey, what's on your mind?</h1>
       </div>
-      <div class="muted" id="auth-status">Checking auth...</div>
+      <div class="messages-wrapper" id="log-display">
+        </div>
     </div>
 
-    <div class="panel">
-      <div id="log" class="log"></div>
+    <div class="input-area">
+      <div class="input-box">
+        <div style="padding:12px 5px; cursor:pointer; color:#999;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+        </div>
+        <textarea id="input" rows="1" placeholder="Message Copilot..."></textarea>
+        <button id="run">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
     </div>
-
-    <div class="input-wrap">
-      <textarea id="input" placeholder="Type a message... (Shift+Enter for newline)"></textarea>
-      <button id="run">Send</button>
-    </div>
+    
+    <div id="log" style="display:none;"></div>
   </main>
 
-  <div class="tutorial" id="tutorial">
-    <div class="tutorial-card">
-      <h3>Welcome to N.O.V.A.</h3>
-      <p>Left sidebar: chat history & new chat. Bottom bar: type and hit Enter to send.</p>
-      <button id="close-tutorial">Got it</button>
-    </div>
-  </div>
+    <script>
+    // UI wiring
+    const statusEl = document.getElementById("status");
+    const logEl = document.getElementById("log"); // hidden legacy log used by main.js
+    const logDisplay = document.getElementById("log-display");
+    const inputEl = document.getElementById("input");
+    const scrollContainer = document.getElementById("scroll-container");
+    const sidebar = document.getElementById("sidebar");
+    const runBtn = document.getElementById("run");
+    const urlParams = new URLSearchParams(location.search);
+    const snapshotParam = urlParams.get("snapshot");
+    const snapshotCandidates = Array.from(new Set([
+      snapshotParam ? snapshotParam : null,
+      window.novaSnapshotName || null,
+      "./model.snapshot",
+      "./nova_snapshot_latest.snapshot"
+    ].filter(Boolean)));
 
-  <script>
-    // Auth redirect check
-    const authKey = "nova_authed";
-    const params = new URLSearchParams(window.location.search);
-    if (!localStorage.getItem(authKey)) {
-      const code = params.get("code");
-      if (!code) {
-        window.location.href = "https://auth.tyloai.com/authorize?client_id=tylo_id_NvN9Bxj3bFuk3k1I44CI7KBM&redirect_uri=https://nova.protoethik.com/app.html&state=123";
-      } else {
-        localStorage.setItem(authKey, "1");
-        history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-    document.getElementById("auth-status").textContent = "Auth OK";
-
-    window.SKIP_TRAINING = false;              // fallback to train on default if no snapshot
-    window.novaDeferBootstrap = true;          // start manually / auto after snapshot or fallback
+    window.SKIP_TRAINING = true;           // snapshot-only mode
+    window.novaDeferBootstrap = true;      // start after snapshot is ready
     window.novaOverrides = { enableHeuristics: false };
 
-    let chats = JSON.parse(localStorage.getItem("nova_chats") || "[]");
-    let currentId = chats[0]?.id || null;
-    const logEl = document.getElementById("log");
-    const statusEl = document.getElementById("status");
-    const inputEl = document.getElementById("input");
-    const chatListEl = document.getElementById("chat-list");
-    const tutorial = document.getElementById("tutorial");
-    if (localStorage.getItem("nova_tutorial_done")) tutorial.classList.add("hidden");
+    const messages = [];
+    let snapshotBuffer = null;
+    let currentSnapshotName = snapshotCandidates[0] || "./model.snapshot";
+    let startRequested = false;
+    const processedLogLines = new Set();
 
-    function renderChats() {
-      chatListEl.innerHTML = "";
-      chats.forEach((c) => {
-        const div = document.createElement("div");
-        div.className = "chat-item" + (c.id === currentId ? " active" : "");
-        div.textContent = c.title || "Untitled";
-        div.onclick = () => { currentId = c.id; saveChats(); renderChats(); renderLog(); };
-        chatListEl.appendChild(div);
-      });
+    function toggleSidebar() {
+      sidebar.classList.toggle("open");
     }
-    function saveChats() { localStorage.setItem("nova_chats", JSON.stringify(chats)); }
-    function ensureChat() {
-      if (!currentId) {
-        const id = crypto.randomUUID();
-        currentId = id;
-        chats.unshift({ id, title: "New chat", messages: [] });
-        saveChats();
+
+    const appendMessage = (role, text) => {
+      const row = document.createElement("div");
+      row.className = `message ${role === "user" ? "user" : "ai"}`;
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.innerText = text;
+      row.appendChild(bubble);
+      if (role !== "user") {
+        const actions = document.createElement("div");
+        actions.className = "msg-actions";
+        const btnCopy = document.createElement("button");
+        btnCopy.className = "action-btn";
+        btnCopy.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+        btnCopy.onclick = () => {
+          navigator.clipboard.writeText(text);
+          btnCopy.textContent = "Copied!";
+          setTimeout(() => (btnCopy.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`), 1000);
+        };
+        actions.appendChild(btnCopy);
+        row.appendChild(actions);
       }
-    }
-    function renderLog() {
-      ensureChat();
-      const chat = chats.find((c) => c.id === currentId);
-      logEl.textContent = "";
-      chat.messages.forEach((m) => {
-        logEl.textContent += `${m.role.toUpperCase()}: ${m.text}\n\n`;
-      });
-      logEl.scrollTop = logEl.scrollHeight;
-    }
-
-    document.getElementById("new-chat").onclick = () => {
-      const id = crypto.randomUUID();
-      chats.unshift({ id, title: "New chat", messages: [] });
-      currentId = id;
-      saveChats(); renderChats(); renderLog();
+      messages.push({ role, text });
+      logDisplay.appendChild(row);
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      document.getElementById("main-container").classList.toggle("empty", messages.length === 0);
     };
-    document.getElementById("close-tutorial").onclick = () => {
-      tutorial.classList.add("hidden");
-      localStorage.setItem("nova_tutorial_done", "1");
-    };
-    const toggleBtn = document.getElementById("toggle-sidebar");
-    if (window.innerWidth < 900 && toggleBtn) {
-      toggleBtn.classList.remove("hidden");
-      toggleBtn.onclick = () => document.getElementById("sidebar").classList.toggle("open");
-    }
 
-    async function loadSnapshotFromFile(fileInput) {
-      const file = fileInput.files?.[0];
-      if (!file) return null;
-      const text = await file.text();
-      return JSON.parse(text);
-    }
-
-    const startIfReady = () => {
-      if (window.startNova) {
-        statusEl.textContent = "Booting...";
-        window.startNova();
-      } else {
-        setTimeout(startIfReady, 200);
+    const pruneProcessed = () => {
+      if (processedLogLines.size <= 300) return;
+      const excess = processedLogLines.size - 300;
+      const it = processedLogLines.values();
+      for (let i = 0; i < excess; i += 1) {
+        processedLogLines.delete(it.next().value);
       }
     };
 
-    document.getElementById("load-snapshot").onclick = async () => {
-      try {
-        const snap = await loadSnapshotFromFile(document.getElementById("snapshot-file"));
-        if (!snap) { statusEl.textContent = "No snapshot"; return; }
-        window.novaOverrides.manualSnapshot = snap;
-        statusEl.textContent = "Snapshot ready";
-        startIfReady();
-      } catch (e) {
-        statusEl.textContent = "Snapshot failed";
+    const syncFromLog = () => {
+      const lines = logEl.textContent.split("\n").filter(Boolean);
+      for (let idx = lines.length - 1; idx >= 0; idx -= 1) {
+        const rawLine = lines[idx];
+        if (processedLogLines.has(rawLine)) continue;
+        processedLogLines.add(rawLine);
+        const line = rawLine.replace(/^\[[^\]]+\]\s*/, "");
+        const userMatch = line.match(/^User:\s*(.*)$/i);
+        if (userMatch && userMatch[1]) {
+          appendMessage("user", userMatch[1]);
+          continue;
+        }
+        const aiMatch = line.match(/^AI:\s*(.*)$/i);
+        if (aiMatch && aiMatch[1]) {
+          appendMessage("ai", aiMatch[1]);
+        }
       }
+      pruneProcessed();
     };
 
-    // Live learning toggle + notes
-    const liveLearnKey = "nova_live_learn";
-    let liveLearn = localStorage.getItem(liveLearnKey) === "1";
-    const userNotes = JSON.parse(localStorage.getItem("nova_notes") || "[]");
-    const liveToggle = document.createElement("label");
-    liveToggle.style.color = "var(--muted)";
-    liveToggle.style.fontSize = "12px";
-    liveToggle.innerHTML = `<input type="checkbox" id="live-toggle" ${liveLearn ? "checked" : ""}> Live Learning`;
-    document.querySelector(".topbar").appendChild(liveToggle);
-    document.getElementById("live-toggle").onchange = (e) => {
-      liveLearn = e.target.checked;
-      localStorage.setItem(liveLearnKey, liveLearn ? "1" : "0");
-    };
+    const logObserver = new MutationObserver(syncFromLog);
+    logObserver.observe(logEl, { childList: true, subtree: true, characterData: true });
 
-    const MAX_CONTEXT = 8;
-    function buildPrompt(raw) {
-      ensureChat();
-      const chat = chats.find((c) => c.id === currentId);
-      const ctx = chat.messages.slice(-MAX_CONTEXT * 2).map((m) => `${m.role === "user" ? "User" : "AI"}: ${m.text}`).join("\n");
-      const notes = liveLearn && userNotes.length ? `\nNotes: ${userNotes.join(" | ")}` : "";
-      return ctx ? `${ctx}${notes}\nUser: ${raw}\nAI:` : `${notes ? notes + "\n" : ""}User: ${raw}\nAI:`;
-    }
-
-    function appendMessage(role, text) {
-      ensureChat();
-      const chat = chats.find((c) => c.id === currentId);
-      chat.messages.push({ role, text });
-      if (!chat.title && role === "user") chat.title = text.slice(0, 30);
-      saveChats(); renderLog();
-    }
+    // Input helpers
     inputEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        document.getElementById("run").click();
+        runBtn.click();
       }
     });
-    document.getElementById("run").addEventListener("click", () => {
-      const text = inputEl.value.trim();
-      if (!text) return;
-      appendMessage("user", text);
-      if (liveLearn) {
-        userNotes.push(text);
-        localStorage.setItem("nova_notes", JSON.stringify(userNotes.slice(-50)));
-      }
-      inputEl.value = buildPrompt(text); // feed context to main.js handler
-    }, true);
+    inputEl.addEventListener("input", function () {
+      this.style.height = "auto";
+      this.style.height = `${this.scrollHeight}px`;
+    });
 
-    // Fallback: if no snapshot provided, auto boot to train on default data
-    setTimeout(() => {
-      if (!window.novaOverrides.manualSnapshot) {
-        statusEl.textContent = "Booting (default training)...";
-        startIfReady();
-      }
-    }, 500);
+    const startWhenReady = () => {
+      if (startRequested) return;
+      startRequested = true;
+      const wait = () => {
+        if (window.startNova && window.novaOverrides.manualSnapshot) {
+          statusEl.textContent = "Booting with snapshot...";
+          window.startNova();
+        } else {
+          setTimeout(wait, 150);
+        }
+      };
+      wait();
+    };
 
-    renderChats();
-    renderLog();
+    const decodeSnapshotBuffer = async () => {
+      if (!snapshotBuffer) return false;
+      if (!window.decodeSnapshotBuffer) {
+        statusEl.textContent = "Waiting for decoder...";
+        setTimeout(decodeSnapshotBuffer, 150);
+        return false;
+      }
+      try {
+        const snap = await window.decodeSnapshotBuffer(snapshotBuffer);
+        if (!snap) throw new Error("parser returned null");
+        window.novaOverrides.manualSnapshot = snap;
+        statusEl.textContent = `Snapshot ready (${currentSnapshotName})`;
+        startWhenReady();
+        return true;
+      } catch (err) {
+        try {
+          const text = new TextDecoder().decode(new Uint8Array(snapshotBuffer));
+          const parsed = JSON.parse(text);
+          if (!parsed) throw new Error("empty JSON");
+          window.novaOverrides.manualSnapshot = parsed;
+          statusEl.textContent = `Snapshot ready (${currentSnapshotName})`;
+          startWhenReady();
+          return true;
+        } catch (jsonErr) {
+          statusEl.textContent = `Snapshot decode failed (${currentSnapshotName})`;
+          runBtn.disabled = true;
+          console.error("Snapshot decode failed", currentSnapshotName, err, jsonErr);
+          return false;
+        }
+      } finally {
+        snapshotBuffer = null;
+      }
+    };
+
+    const looksLikeHtml = (buffer) => {
+      const prefix = new Uint8Array(buffer, 0, Math.min(buffer.byteLength, 64));
+      const asText = new TextDecoder().decode(prefix).toLowerCase();
+      return asText.includes("<!doctype") || asText.includes("<html");
+    };
+
+    const fetchSnapshot = async () => {
+      let lastError = null;
+      for (const candidate of snapshotCandidates) {
+        currentSnapshotName = candidate;
+        statusEl.textContent = `Loading snapshot (${candidate})...`;
+        try {
+          const res = await fetch(candidate);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const buf = await res.arrayBuffer();
+          if (!buf || buf.byteLength === 0) throw new Error("empty file");
+          if (looksLikeHtml(buf)) throw new Error("got HTML instead of snapshot");
+          snapshotBuffer = buf;
+          // Ensure decoder is ready before concluding failure.
+          if (!window.decodeSnapshotBuffer) {
+            await new Promise((resolve) => {
+              const wait = () => {
+                if (window.decodeSnapshotBuffer) return resolve();
+                setTimeout(wait, 100);
+              };
+              wait();
+            });
+          }
+          const ok = await decodeSnapshotBuffer();
+          if (!ok || !window.novaOverrides.manualSnapshot) {
+            throw new Error("decode returned null");
+          }
+          return true;
+        } catch (err) {
+          statusEl.textContent = `Snapshot failed (${candidate}: ${err.message})`;
+          console.error("Snapshot fetch failed", candidate, err);
+          snapshotBuffer = null;
+          lastError = err;
+        }
+      }
+      statusEl.textContent = lastError
+        ? `Snapshot decode failed (last error: ${lastError.message})`
+        : "Snapshot decode failed (no valid candidate)";
+      runBtn.disabled = true;
+      return false;
+    };
+
+    // Auto-load snapshot immediately
+    fetchSnapshot();
+
+    // Sidebar reset chat
+    document.getElementById("new-chat").onclick = () => {
+      messages.length = 0;
+      logDisplay.innerHTML = "";
+      document.getElementById("main-container").classList.add("empty");
+      if (window.innerWidth < 900) sidebar.classList.remove("open");
+    };
   </script>
   <script type="module" src="./src/main.js"></script>
 </body>

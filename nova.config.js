@@ -20,11 +20,12 @@ export const novaConfig = {
     shuffle: true,
     tokenStride: 1,
     logEvery: 1200,
-    yieldEvery: 40
+    yieldEvery: 40,
+    progressEvery: 80
   },
   runtime: {
     thinkingSteps: 12,
-    maxReplyTokens: 220,
+    maxReplyTokens: 120,
     minReplyTokens: 3,
     temperature: 0.45, // Cooler sampling to suppress off-topic picks
     topK: 12, // Looser topK to avoid getting stuck
@@ -44,10 +45,10 @@ export const novaConfig = {
     punctuationPenalty: 1.2,
     doublePunctuationPenalty: 2.2,
     startPunctuationPenalty: 1.6,
-    minWordsBeforePunct: 1,
+    minWordsBeforePunct: 2,
     punctuationHardBlock: true,
-    minWordTokens: 8,
-    maxSentences: 3,
+    minWordTokens: 4,
+    maxSentences: 2,
     bigramWeight: 1.3, // Stronger n-gram constraints to curb tangents
     bigramFilter: true,
     strictBigram: false,
@@ -61,6 +62,7 @@ export const novaConfig = {
     logitNormEps: 0.000001,
     logitScale: 2.0,
     codeOnly: false,
+    logTokens: true,
     learningRate: 0.001,   // Boost online updates to keep learning syntax
     decay: 0.9             // Preserve state longer to avoid rapid forgetting
   },
